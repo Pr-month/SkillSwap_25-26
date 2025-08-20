@@ -1,8 +1,6 @@
 name: CI - Lint and Tests
 
 on:
-  push:
-    branches: ['**']
   pull_request:
     branches: ['**']
 
@@ -26,8 +24,8 @@ jobs:
         run: npm run lint
 
   unit-tests:
-    name: Run Unit Tests (only on main)
-    if: github.ref == 'refs/heads/main'
+    name: Run Unit Tests (only on PR to main)
+    if: github.base_ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -45,8 +43,8 @@ jobs:
         run: npm run test
 
   e2e-tests:
-    name: Run E2E Tests (only on main)
-    if: github.ref == 'refs/heads/main'
+    name: Run E2E Tests (only on PR to main)
+    if: github.base_ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
     services:
