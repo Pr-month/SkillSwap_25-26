@@ -5,7 +5,6 @@ import { UsersService } from '../../users/users.service';
 
 describe('JwtStrategy', () => {
   let strategy: JwtStrategy;
-  let configService: ConfigService;
   let usersService: UsersService;
 
   beforeEach(async () => {
@@ -28,7 +27,6 @@ describe('JwtStrategy', () => {
     }).compile();
 
     strategy = module.get<JwtStrategy>(JwtStrategy);
-    configService = module.get<ConfigService>(ConfigService);
     usersService = module.get<UsersService>(UsersService);
   });
 
@@ -37,6 +35,15 @@ describe('JwtStrategy', () => {
   });
 
   it('should validate JWT payload correctly', async () => {
+    const mockUser = {
+      id: 1,
+      email: 'test@example.com',
+      name: 'Test User',
+      password: 'hashedpassword',
+      createdAt: new Date(),
+    };
+    jest.spyOn(usersService, 'findOne').mockResolvedValue(mockUser);
+
     const payload = {
       sub: 1,
       email: 'test@example.com',
