@@ -13,7 +13,15 @@ import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+
+interface AuthenticatedRequest extends Request {
+  user: {
+    userId: number;
+    email: string;
+  };
+}
 
 @Controller('users')
 export class UsersController {
@@ -37,10 +45,20 @@ export class UsersController {
   @Patch('me')
   @UseGuards(JwtAuthGuard)
   async updateMe(
-    @Request() req: any,
+    @Request() req: AuthenticatedRequest,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<User> {
     const userId = req.user.userId;
     return this.usersService.update(userId, updateUserDto);
+  }
+
+  @Patch('me/password')
+  @UseGuards(JwtAuthGuard)
+  async updatePassword(
+    @Request() req: AuthenticatedRequest,
+    @Body() updatePasswordDto: UpdatePasswordDto,
+  ): Promise<User> {
+    const userId = req.user.userId;
+    return this.usersService.updatePassword(userId, updatePasswordDto);
   }
 }

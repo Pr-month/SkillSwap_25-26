@@ -32,12 +32,12 @@ export class RefreshTokenStrategy extends PassportStrategy(
   async validate(req: any, payload: RefreshTokenPayload) {
     // Проверяем, что это refresh токен
     if (payload.tokenType !== 'refresh') {
-      throw new UnauthorizedException('Invalid token type');
+      throw new UnauthorizedException('Неверный тип токена');
     }
 
     const user = await this.usersService.findOne(payload.sub);
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException('Пользователь не найден');
     }
 
     return { userId: user.id, email: user.email };

@@ -1,9 +1,14 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 
 @Injectable()
 export class UsersService {
@@ -24,7 +29,7 @@ export class UsersService {
   async findOne(id: number): Promise<User> {
     const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+      throw new NotFoundException(`Пользователь с ID ${id} не найден`);
     }
     return user;
   }
@@ -38,6 +43,23 @@ export class UsersService {
 
     // Обновляем только переданные поля
     Object.assign(user, updateUserDto);
+
+    return this.usersRepository.save(user);
+  }
+
+  async updatePassword(
+    id: number,
+    updatePasswordDto: UpdatePasswordDto,
+  ): Promise<User> {
+    const user = await this.findOne(id);
+
+    // Проверяем текущий пароль (пока без хеширования)
+    if (user.password !== updatePasswordDto.currentPassword) {
+      throw new UnauthorizedException('Текущий пароль указан неверно');
+    }
+
+    // Обновляем пароль (пока без хеширования)
+    user.password = updatePasswordDto.newPassword;
 
     return this.usersRepository.save(user);
   }

@@ -35,12 +35,12 @@ describe('RefreshTokenStrategy', () => {
   });
 
   it('should validate refresh token payload correctly', async () => {
-    const mockUser = { 
-      id: 1, 
-      email: 'test@example.com', 
+    const mockUser = {
+      id: 1,
+      email: 'test@example.com',
       name: 'Test User',
       password: 'hashedpassword',
-      createdAt: new Date()
+      createdAt: new Date(),
     };
     jest.spyOn(usersService, 'findOne').mockResolvedValue(mockUser);
 
@@ -65,7 +65,7 @@ describe('RefreshTokenStrategy', () => {
     const payload = {
       sub: 1,
       email: 'test@example.com',
-      tokenType: 'access' as any, // Invalid token type
+      tokenType: 'access' as any, // Неверный тип токена
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 3600,
     };
@@ -73,7 +73,7 @@ describe('RefreshTokenStrategy', () => {
     const req = {};
 
     await expect(strategy.validate(req, payload)).rejects.toThrow(
-      'Invalid token type',
+      'Неверный тип токена',
     );
   });
 });
