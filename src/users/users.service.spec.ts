@@ -1,10 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+
+// Мокаем bcrypt
+jest.mock('bcrypt', () => ({
+  compare: jest.fn(),
+  hash: jest.fn(),
+}));
+
+const mockedBcrypt = bcrypt as jest.Mocked<typeof bcrypt>;
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -18,6 +27,9 @@ describe('UsersService', () => {
   };
 
   beforeEach(async () => {
+    // Очищаем все моки перед каждым тестом
+    jest.clearAllMocks();
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
@@ -82,14 +94,21 @@ describe('UsersService', () => {
         currentPassword: 'oldPassword',
         newPassword: 'newPassword123',
       };
+      const hashedOldPassword = 'hashedOldPassword';
+      const hashedNewPassword = 'hashedNewPassword';
       const existingUser = {
         id: userId,
         name: 'Test User',
         email: 'test@example.com',
-        password: 'oldPassword',
+        password: hashedOldPassword,
         createdAt: new Date(),
       };
-      const updatedUser = { ...existingUser, password: 'newPassword123' };
+      const updatedUser = { ...existingUser, password: hashedNewPassword };
+
+      // Мокаем bcrypt.compare для проверки текущего пароля
+      (mockedBcrypt.compare as any).mockResolvedValue(true);
+      // Мокаем bcrypt.hash для хеширования нового пароля
+      (mockedBcrypt.hash as any).mockResolvedValue(hashedNewPassword);
 
       const findOneSpy = jest
         .spyOn(service, 'findOne')
@@ -101,6 +120,11 @@ describe('UsersService', () => {
       const result = await service.updatePassword(userId, updatePasswordDto);
 
       expect(findOneSpy).toHaveBeenCalledWith(userId);
+      expect(mockedBcrypt.compare).toHaveBeenCalledWith(
+        'oldPassword',
+        hashedOldPassword,
+      );
+      expect(mockedBcrypt.hash).toHaveBeenCalledWith('newPassword123', 10);
       expect(saveSpy).toHaveBeenCalledWith(updatedUser);
       expect(result).toEqual(updatedUser);
     });
@@ -111,19 +135,29 @@ describe('UsersService', () => {
         currentPassword: 'wrongPassword',
         newPassword: 'newPassword123',
       };
+      const hashedPassword = 'hashedPassword';
       const existingUser = {
         id: userId,
         name: 'Test User',
         email: 'test@example.com',
-        password: 'correctPassword',
+        password: hashedPassword,
         createdAt: new Date(),
       };
+
+      // Мокаем bcrypt.compare для возврата false (неверный пароль)
+      (mockedBcrypt.compare as any).mockResolvedValue(false);
 
       jest.spyOn(service, 'findOne').mockResolvedValue(existingUser as User);
 
       await expect(
         service.updatePassword(userId, updatePasswordDto),
       ).rejects.toThrow('Текущий пароль указан неверно');
+
+      expect(mockedBcrypt.compare).toHaveBeenCalledWith(
+        'wrongPassword',
+        hashedPassword,
+      );
+      expect(mockedBcrypt.hash).not.toHaveBeenCalled();
     });
 
     it('should throw NotFoundException if user not found', async () => {
@@ -140,6 +174,82 @@ describe('UsersService', () => {
       await expect(
         service.updatePassword(userId, updatePasswordDto),
       ).rejects.toThrow();
+    });
+  });
+
+  describe('validatePassword', () => {
+    it('should return user if password is valid', async () => {
+      const email = 'test@example.com';
+      const password = 'password123';
+      const hashedPassword = 'hashedPassword';
+      const user = {
+        id: 1,
+        name: 'Test User',
+        email,
+        password: hashedPassword,
+        createdAt: new Date(),
+      };
+
+      // Мокаем findByEmail
+      const findByEmailSpy = jest
+        .spyOn(service, 'findByEmail')
+        .mockResolvedValue(user as User);
+      // Мокаем bcrypt.compare для возврата true
+      (mockedBcrypt.compare as any).mockResolvedValue(true);
+
+      const result = await service.validatePassword(email, password);
+
+      expect(findByEmailSpy).toHaveBeenCalledWith(email);
+      expect(mockedBcrypt.compare).toHaveBeenCalledWith(
+        password,
+        hashedPassword,
+      );
+      expect(result).toEqual(user);
+    });
+
+    it('should return null if user not found', async () => {
+      const email = 'nonexistent@example.com';
+      const password = 'password123';
+
+      // Мокаем findByEmail для возврата null
+      const findByEmailSpy = jest
+        .spyOn(service, 'findByEmail')
+        .mockResolvedValue(null);
+
+      const result = await service.validatePassword(email, password);
+
+      expect(findByEmailSpy).toHaveBeenCalledWith(email);
+      expect(mockedBcrypt.compare).not.toHaveBeenCalled();
+      expect(result).toBeNull();
+    });
+
+    it('should return null if password is invalid', async () => {
+      const email = 'test@example.com';
+      const password = 'wrongPassword';
+      const hashedPassword = 'hashedPassword';
+      const user = {
+        id: 1,
+        name: 'Test User',
+        email,
+        password: hashedPassword,
+        createdAt: new Date(),
+      };
+
+      // Мокаем findByEmail
+      const findByEmailSpy = jest
+        .spyOn(service, 'findByEmail')
+        .mockResolvedValue(user as User);
+      // Мокаем bcrypt.compare для возврата false
+      (mockedBcrypt.compare as any).mockResolvedValue(false);
+
+      const result = await service.validatePassword(email, password);
+
+      expect(findByEmailSpy).toHaveBeenCalledWith(email);
+      expect(mockedBcrypt.compare).toHaveBeenCalledWith(
+        password,
+        hashedPassword,
+      );
+      expect(result).toBeNull();
     });
   });
 });

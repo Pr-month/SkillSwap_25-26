@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { RefreshTokenStrategy } from './refresh-token.strategy';
 import { UsersService } from '../../users/users.service';
+import { Request } from 'express';
 
 describe('RefreshTokenStrategy', () => {
   let strategy: RefreshTokenStrategy;
@@ -52,12 +53,17 @@ describe('RefreshTokenStrategy', () => {
       exp: Math.floor(Date.now() / 1000) + 3600,
     };
 
-    const req = {};
+    const req = {
+      cookies: {
+        refreshToken: 'test-refresh-token',
+      },
+    } as Request;
     const result = await strategy.validate(req, payload);
 
     expect(result).toEqual({
       userId: 1,
       email: 'test@example.com',
+      refreshToken: 'test-refresh-token',
     });
   });
 
@@ -70,10 +76,32 @@ describe('RefreshTokenStrategy', () => {
       exp: Math.floor(Date.now() / 1000) + 3600,
     };
 
-    const req = {};
+    const req = {
+      cookies: {
+        refreshToken: 'test-refresh-token',
+      },
+    } as Request;
 
     await expect(strategy.validate(req, payload)).rejects.toThrow(
       'Неверный тип токена',
+    );
+  });
+
+  it('should throw UnauthorizedException when refresh token is missing', async () => {
+    const payload = {
+      sub: 1,
+      email: 'test@example.com',
+      tokenType: 'refresh' as const,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    };
+
+    const req = {
+      cookies: {},
+    } as Request;
+
+    await expect(strategy.validate(req, payload)).rejects.toThrow(
+      'Refresh token not found',
     );
   });
 });

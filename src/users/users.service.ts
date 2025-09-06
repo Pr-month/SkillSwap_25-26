@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -22,7 +23,14 @@ export class UsersService {
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const user = this.usersRepository.create(createUserDto);
+    // Хешируем пароль перед сохранением
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+
+    const user = this.usersRepository.create({
+      ...createUserDto,
+      password: hashedPassword,
+    });
+
     return this.usersRepository.save(user);
   }
 
@@ -53,14 +61,39 @@ export class UsersService {
   ): Promise<User> {
     const user = await this.findOne(id);
 
-    // Проверяем текущий пароль (пока без хеширования)
-    if (user.password !== updatePasswordDto.currentPassword) {
+    // Проверяем текущий пароль с помощью bcrypt
+    const isCurrentPasswordValid = await bcrypt.compare(
+      updatePasswordDto.currentPassword,
+      user.password,
+    );
+
+    if (!isCurrentPasswordValid) {
       throw new UnauthorizedException('Текущий пароль указан неверно');
     }
 
-    // Обновляем пароль (пока без хеширования)
-    user.password = updatePasswordDto.newPassword;
+    // Хешируем новый пароль
+    const hashedNewPassword = await bcrypt.hash(
+      updatePasswordDto.newPassword,
+      10,
+    );
+    user.password = hashedNewPassword;
 
     return this.usersRepository.save(user);
+  }
+
+  /**
+   * Проверяет пароль пользователя (полезно для AuthService)
+   */
+  async validatePassword(
+    email: string,
+    password: string,
+  ): Promise<User | null> {
+    const user = await this.findByEmail(email);
+    if (!user) {
+      return null;
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    return isPasswordValid ? user : null;
   }
 }
