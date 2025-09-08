@@ -3,7 +3,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { LoginDto } from 'src/users/dto/login.auth.dto';
+import { LoginDto } from 'src/auth/dto/login.auth.dto';
 import { UsersService } from 'src/users/users.service';
 
 @Injectable()
