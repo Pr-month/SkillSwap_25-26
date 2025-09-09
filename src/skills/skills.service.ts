@@ -4,7 +4,8 @@ import { UpdateSkillDto } from './dto/update-skill.dto';
 
 @Injectable()
 export class SkillsService {
-  create(_createSkillDto: CreateSkillDto) {
+  // eslint-disable-next-line
+  create(createSkillDto: CreateSkillDto) {
     return 'This action adds a new skill';
   }
 
@@ -15,7 +16,8 @@ export class SkillsService {
   findOne(id: number) {
     return `This action returns a #${id} skill`;
   }
-
+  
+  // eslint-disable-next-line
   update(id: number, _updateSkillDto: UpdateSkillDto) {
     return `This action updates a #${id} skill`;
   }
