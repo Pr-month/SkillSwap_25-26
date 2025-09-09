@@ -5,12 +5,6 @@ export interface LoginDto {
   password: string;
 }
 
-export interface RegisterDto {
-  name: string;
-  email: string;
-  password: string;
-}
-
 export interface AuthResponse {
   user: Omit<User, 'password'>;
   accessToken: string;
@@ -20,6 +14,7 @@ export interface AuthResponse {
 export interface TokenPayload {
   sub: number;
   email: string;
+  role: string;
   iat?: number;
   exp?: number;
 }
@@ -31,4 +26,5 @@ export interface RefreshTokenPayload extends TokenPayload {
 export interface AuthenticatedUser {
   userId: number;
   email: string;
+  role: string;
 }

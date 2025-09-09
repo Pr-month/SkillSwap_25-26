@@ -47,6 +47,7 @@ describe('JwtStrategy', () => {
     const payload = {
       sub: 1,
       email: 'test@example.com',
+      role: 'user',
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 3600,
     };
@@ -56,6 +57,7 @@ describe('JwtStrategy', () => {
     expect(result).toEqual({
       userId: 1,
       email: 'test@example.com',
+      role: 'user',
     });
   });
 });
