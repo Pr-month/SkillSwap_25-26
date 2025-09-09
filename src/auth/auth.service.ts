@@ -33,4 +33,12 @@ export class AuthService {
       },
     };
   }
+
+  async logoutUser(userId: number) {
+    await this.usersService.removeRefreshToken(userId);
+    return {
+      success: true,
+      message: 'Выход выполнен успешно',
+    };
+  }
 }

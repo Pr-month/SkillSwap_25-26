@@ -19,6 +19,15 @@ export class User {
   @Column()
   password: string;
 
+  @Column({ nullable: true })
+  refreshToken: string;
+
   @CreateDateColumn()
   createdAt: Date;
+}
+
+export type JwtUser = Pick<User, 'id' | 'email' | 'name'>;
+
+export interface RequestWithUser extends Request {
+  user: JwtUser;
 }

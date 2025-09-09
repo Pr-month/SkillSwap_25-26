@@ -31,4 +31,8 @@ export class UsersService {
   async findByEmail(email: string): Promise<User | null> {
     return this.usersRepository.findOne({ where: { email } });
   }
+
+  async removeRefreshToken(userId: number) {
+    await this.usersRepository.update(userId, { refreshToken: undefined });
+  }
 }
