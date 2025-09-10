@@ -21,12 +21,12 @@ import { AuthenticatedRequest } from 'src/auth/interfaces/auth.interface';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  async getMe(@Req() req) {
-    return this.usersService.findOne(req.user.id);
+  async getMe(@Req() req: AuthenticatedRequest) {
+    return this.usersService.findOne(req.user.userId);
   }
 
   @Get()
@@ -64,4 +64,3 @@ export class UsersController {
     return this.usersService.updatePassword(userId, updatePasswordDto);
   }
 }
-
