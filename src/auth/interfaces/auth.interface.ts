@@ -12,7 +12,7 @@ export interface AuthResponse {
 }
 
 export interface TokenPayload {
-  sub: number;
+  sub: string;
   email: string;
   role: string;
   iat?: number;
@@ -24,7 +24,19 @@ export interface RefreshTokenPayload extends TokenPayload {
 }
 
 export interface AuthenticatedUser {
-  userId: number;
+  userId: string;
   email: string;
   role: string;
+}
+
+export interface AuthenticatedRequest extends Request {
+  user: AuthenticatedUser;
+}
+
+export interface RefreshTokenPayload {
+  sub: string;
+  email: string;
+  tokenType: 'refresh';
+  iat?: number;
+  exp?: number;
 }

@@ -46,7 +46,7 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { email } });
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id);
 
     // Обновляем только переданные поля
@@ -56,7 +56,7 @@ export class UsersService {
   }
 
   async updatePassword(
-    id: number,
+    id: string,
     updatePasswordDto: UpdatePasswordDto,
   ): Promise<User> {
     const user = await this.findOne(id);
