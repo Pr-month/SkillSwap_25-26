@@ -8,31 +8,43 @@ import { TokensDto } from './dto/tokens.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ConfigService } from '@nestjs/config';
+import { User } from '../users/entities/user.entity';
+import * as bcrypt from 'bcrypt';
+import { CreateUserDto } from '../users/dto/create-user.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepository: Repository<RefreshToken>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
+
+  async register(createUserDto: CreateUserDto): Promise<User> {
+    const existingUser = await this.userRepository.findOne({
+      where: { email: createUserDto.email },
+    });
+
+    if (existingUser) {
+      throw new UnauthorizedException('User already exists with this email');
+    }
+
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    const user = this.userRepository.create({
+      ...createUserDto,
+      password: hashedPassword,
+    });
+    return this.userRepository.save(user);
+  }
 
   async login(loginDto: LoginDto): Promise<TokensDto> {
     const user = await this.usersService.findByEmail(loginDto.email);
 
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-
-    // В реальном приложении здесь должна быть проверка пароля с bcrypt
-    // const isPasswordValid = await comparePasswords(loginDto.password, user.password);
-    // if (!isPasswordValid) {
-    //   throw new UnauthorizedException('Invalid credentials');
-    // }
-
-    if (loginDto.password !== user.password) {
+    if (!user || !(await bcrypt.compare(loginDto.password, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -56,8 +68,10 @@ export class AuthService {
       await this.refreshTokenRepository.save(tokenEntity);
       throw new UnauthorizedException('Refresh token expired');
     }
+
     tokenEntity.isActive = false;
     await this.refreshTokenRepository.save(tokenEntity);
+
     return this.generateTokens(tokenEntity.user.id);
   }
 
@@ -88,6 +102,7 @@ export class AuthService {
       user,
       userId: user.id,
       expiresAt,
+      isActive: true,
     });
 
     return { accessToken, refreshToken };

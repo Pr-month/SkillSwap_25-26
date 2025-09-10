@@ -1,17 +1,17 @@
 import { IsNotEmpty, IsString, IsOptional } from 'class-validator';
 
 export class CreateSkillDto {
-    @IsNotEmpty()
-    @IsString()
-    title: string;
+  @IsNotEmpty()
+  @IsString()
+  title: string;
 
-    @IsNotEmpty()
-    @IsString()
-    description: string;
+  @IsNotEmpty()
+  @IsString()
+  description: string;
 
-    @IsOptional()
-    images?: string[];
+  @IsOptional()
+  images?: string[];
 
-    @IsNotEmpty()
-    category: string; 
+  @IsNotEmpty()
+  category: string;
 }
