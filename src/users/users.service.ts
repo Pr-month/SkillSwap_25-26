@@ -16,7 +16,7 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
-  ) {}
+  ) { }
 
   async findAll(): Promise<User[]> {
     return this.usersRepository.find();
@@ -46,6 +46,10 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { email } });
   }
 
+  async removeRefreshToken(userId: number) {
+    await this.usersRepository.update(userId, { refreshToken: undefined });
+  }
+  
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id);
 
