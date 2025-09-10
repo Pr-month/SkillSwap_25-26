@@ -1,3 +1,4 @@
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
   Controller,
   Get,
@@ -8,7 +9,10 @@ import {
   Patch,
   UseGuards,
   Request,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
+
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -22,10 +26,17 @@ interface AuthenticatedRequest extends Request {
     email: string;
   };
 }
+import { create } from 'domain';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) { }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  async getMe(@Req() req) {
+    return this.usersService.findOne(req.user.id);
+  }
 
   @Get()
   async findAll(): Promise<User[]> {
@@ -33,7 +44,7 @@ export class UsersController {
   }
 
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number): Promise<User> {
+  async findOne(@Param('id', ParseIntPipe) id: string): Promise<User> {
     return this.usersService.findOne(id);
   }
 
@@ -62,3 +73,4 @@ export class UsersController {
     return this.usersService.updatePassword(userId, updatePasswordDto);
   }
 }
+
