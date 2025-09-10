@@ -1,14 +1,10 @@
 
-import { Controller, Post, Body, Request } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { LoginDto } from 'src/auth/dto/login.auth.dto';
-import { RequestWithUser } from 'src/users/entities/user.entity';
 
-import { Body, Controller, Post } from '@nestjs/common';
+import { Controller, Post, Body, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { TokensDto } from './dto/tokens.dto';
+import { AuthenticatedRequest, LoginDto } from './interfaces/auth.interface';
 
 @Controller('auth')
 export class AuthController {
@@ -25,7 +21,7 @@ export class AuthController {
   }
 
   @Post('logout')
-  async logoutUser(@Request() req: RequestWithUser) {
-    return await this.authService.logoutUser(req.user.id);
+  async logoutUser(@Req() req: AuthenticatedRequest) {
+    return await this.authService.logoutUser(req.user.userId);
   }
 }

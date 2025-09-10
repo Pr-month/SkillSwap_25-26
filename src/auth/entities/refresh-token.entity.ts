@@ -28,5 +28,5 @@ export class RefreshToken {
   user: User;
 
   @Column()
-  userId: number;
+  userId: string;
 }

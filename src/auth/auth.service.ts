@@ -17,7 +17,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   async login(loginDto: LoginDto): Promise<TokensDto> {
     const user = await this.usersService.findByEmail(loginDto.email);
@@ -58,10 +58,10 @@ export class AuthService {
     }
     tokenEntity.isActive = false;
     await this.refreshTokenRepository.save(tokenEntity);
-    return this.generateTokens(tokenEntity.userId);
+    return this.generateTokens(tokenEntity.user.id);
   }
 
-  private async generateTokens(userId: number): Promise<TokensDto> {
+  private async generateTokens(userId: string): Promise<TokensDto> {
     const user = await this.usersService.findOne(userId);
 
     const accessToken = this.jwtService.sign(
@@ -93,7 +93,7 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  async logoutUser(userId: number) {
+  async logoutUser(userId: string) {
     await this.usersService.removeRefreshToken(userId);
     return {
       success: true,
