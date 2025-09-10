@@ -1,8 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 
 @Injectable()
 export class UsersService {
@@ -16,14 +23,21 @@ export class UsersService {
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const user = this.usersRepository.create(createUserDto);
+    // Хешируем пароль перед сохранением
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+
+    const user = this.usersRepository.create({
+      ...createUserDto,
+      password: hashedPassword,
+    });
+
     return this.usersRepository.save(user);
   }
 
-  async findOne(id: number): Promise<User> {
+  async findOne(id: string): Promise<User> {
     const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) {
-      throw new NotFoundException(`User with ID ${id} not found`);
+      throw new NotFoundException(`Пользователь с ID ${id} не найден`);
     }
     return user;
   }
@@ -34,5 +48,56 @@ export class UsersService {
 
   async removeRefreshToken(userId: number) {
     await this.usersRepository.update(userId, { refreshToken: undefined });
+  }
+  
+  async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+    const user = await this.findOne(id);
+
+    // Обновляем только переданные поля
+    Object.assign(user, updateUserDto);
+
+    return this.usersRepository.save(user);
+  }
+
+  async updatePassword(
+    id: number,
+    updatePasswordDto: UpdatePasswordDto,
+  ): Promise<User> {
+    const user = await this.findOne(id);
+
+    // Проверяем текущий пароль с помощью bcrypt
+    const isCurrentPasswordValid = await bcrypt.compare(
+      updatePasswordDto.currentPassword,
+      user.password,
+    );
+
+    if (!isCurrentPasswordValid) {
+      throw new UnauthorizedException('Текущий пароль указан неверно');
+    }
+
+    // Хешируем новый пароль
+    const hashedNewPassword = await bcrypt.hash(
+      updatePasswordDto.newPassword,
+      10,
+    );
+    user.password = hashedNewPassword;
+
+    return this.usersRepository.save(user);
+  }
+
+  /**
+   * Проверяет пароль пользователя (полезно для AuthService)
+   */
+  async validatePassword(
+    email: string,
+    password: string,
+  ): Promise<User | null> {
+    const user = await this.findByEmail(email);
+    if (!user) {
+      return null;
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    return isPasswordValid ? user : null;
   }
 }
