@@ -1,33 +1,28 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
-
-// Определение типа для payload JWT токена
-interface JwtPayload {
-  sub: number;
-  email: string;
-  [key: string]: any;
-}
+import { UsersService } from '../../users/users.service';
+import { TokenPayload } from '../interfaces/auth.interface';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private configService: ConfigService) {
-    const jwtSecret = configService.get<string>('JWT_SECRET');
-
-    if (!jwtSecret) {
-      throw new Error('JWT_SECRET не указан в конфигурации');
-    }
-
+  constructor(
+    private configService: ConfigService,
+    private usersService: UsersService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: jwtSecret,
+      secretOrKey: configService.get<string>('JWT_SECRET') || 'default-secret',
     });
   }
 
-  // Убираем async, т.к. нет await операций
-  validate(payload: JwtPayload): { userId: number; email: string } {
-    return { userId: payload.sub, email: payload.email };
+  async validate(payload: TokenPayload) {
+    const user = await this.usersService.findOne(payload.sub);
+    if (!user) {
+      throw new UnauthorizedException('Пользователь не найден');
+    }
+    return { userId: user.id, email: user.email, role: payload.role };
   }
 }
