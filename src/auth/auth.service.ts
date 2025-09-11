@@ -37,16 +37,11 @@ export class AuthService {
     });
 
     return this.generateTokens(user.id);
->>>>>>> dd7ef3e (Fixes: Полная функциональность AuthService с безопасностью)
   }
 
   async login(loginDto: LoginDto): Promise<TokensDto> {
     const user = await this.usersService.findByEmail(loginDto.email);
 
-<<<<<<< HEAD
-    if (!user || !(await bcrypt.compare(loginDto.password, user.password))) {
-      throw new UnauthorizedException('Invalid credentials');
-=======
     if (!user) {
       throw new UnauthorizedException('Неверные учетные данные');
     }
@@ -57,7 +52,6 @@ export class AuthService {
     );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Неверные учетные данные');
->>>>>>> dd7ef3e (Fixes: Полная функциональность AuthService с безопасностью)
     }
 
     return this.generateTokens(user.id);
