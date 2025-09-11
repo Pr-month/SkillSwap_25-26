@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { JwtModule } from '@nestjs/jwt';
@@ -7,35 +7,45 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { SkillsModule } from './skills/skills.module';
+import { FilesModule } from './files/files.module';
+import { appConfig, jwtConfig, databaseConfig } from './config';
+import type { IJwtConfig, IDatabaseConfig } from './config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      load: [appConfig, jwtConfig, databaseConfig],
+    }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
+      inject: [databaseConfig.KEY],
+      useFactory: (config: IDatabaseConfig) => ({
         type: 'postgres',
-        host: config.get('DB_HOST'),
-        port: parseInt(config.get('DB_PORT', '5432'), 10),
-        username: config.get('DB_USERNAME'),
-        password: config.get('DB_PASSWORD'),
-        database: config.get('DB_DATABASE'),
+        host: config.host,
+        port: config.port,
+        username: config.username,
+        password: config.password,
+        database: config.database,
         autoLoadEntities: true,
-        synchronize: true,
+        synchronize: config.synchronize,
       }),
     }),
     JwtModule.registerAsync({
+      global: true,
       imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        global: true,
-        secret: config.get('JWT_SECRET'),
+      inject: [jwtConfig.KEY],
+      useFactory: (config: IJwtConfig) => ({
+        secret: config.accessSecret,
+        signOptions: {
+          expiresIn: config.accessExpiration,
+        },
       }),
     }),
     UsersModule,
     AuthModule,
     SkillsModule,
+    FilesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
