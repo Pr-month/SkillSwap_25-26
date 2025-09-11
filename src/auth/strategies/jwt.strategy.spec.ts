@@ -36,16 +36,22 @@ describe('JwtStrategy', () => {
 
   it('should validate JWT payload correctly', async () => {
     const mockUser = {
-      id: 1,
+      id: 'uuid-123',
       email: 'test@example.com',
       name: 'Test User',
       password: 'hashedpassword',
+      about: null,
+      birthdate: null,
+      city: null,
+      gender: 'male',
+      avatar: null,
+      role: 'user',
       createdAt: new Date(),
     };
-    jest.spyOn(usersService, 'findOne').mockResolvedValue(mockUser);
+    jest.spyOn(usersService, 'findOne').mockResolvedValue(mockUser as any);
 
     const payload = {
-      sub: 1,
+      sub: 'uuid-123',
       email: 'test@example.com',
       role: 'user',
       iat: Math.floor(Date.now() / 1000),
@@ -55,7 +61,7 @@ describe('JwtStrategy', () => {
     const result = await strategy.validate(payload);
 
     expect(result).toEqual({
-      userId: 1,
+      userId: 'uuid-123',
       email: 'test@example.com',
       role: 'user',
     });
