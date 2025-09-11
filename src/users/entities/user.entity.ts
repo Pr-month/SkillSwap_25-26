@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 import { Gender, UserRole } from '../enums';
 // import { Skill } from './skill.entity'; 
 // import { Category } from './category.entity'; 
