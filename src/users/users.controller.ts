@@ -1,11 +1,11 @@
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AuthenticatedRequest } from '../auth/interfaces/auth.interface';
 import {
   Controller,
   Get,
   Post,
   Body,
   Param,
-  ParseIntPipe,
   Patch,
   UseGuards,
   Request,
@@ -25,8 +25,8 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  async getMe(@Req() req) {
-    return this.usersService.findOne(req.user.id);
+  async getMe(@Req() req: AuthenticatedRequest) {
+    return this.usersService.findOne(req.user.userId);
   }
 
   @Get()
@@ -35,7 +35,7 @@ export class UsersController {
   }
 
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: string): Promise<User> {
+  async findOne(@Param('id') id: string): Promise<User> {
     return this.usersService.findOne(id);
   }
 
