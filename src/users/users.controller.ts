@@ -21,7 +21,7 @@ import { AuthenticatedRequest } from 'src/auth/interfaces/auth.interface';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
@@ -35,7 +35,7 @@ export class UsersController {
   }
 
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: string): Promise<User> {
+  async findOne(@Param('id') id: string): Promise<User> {
     return this.usersService.findOne(id);
   }
 
@@ -64,4 +64,3 @@ export class UsersController {
     return this.usersService.updatePassword(userId, updatePasswordDto);
   }
 }
-
