@@ -49,7 +49,7 @@ describe('RefreshTokenStrategy', () => {
       role: 'user',
       createdAt: new Date(),
     };
-    jest.spyOn(usersService, 'findOne').mockResolvedValue(mockUser as any);
+    jest.spyOn(usersService, 'findOne').mockResolvedValue(mockUser);
 
     const payload = {
       sub: 'uuid-123',
