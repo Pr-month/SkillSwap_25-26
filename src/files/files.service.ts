@@ -1,9 +1,15 @@
-import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  Logger,
+  Inject,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ConfigService } from '@nestjs/config';
 import { FileUploadResponseDto } from './dto/file-upload-response.dto';
 import { FileEntity } from './entities/file.entity';
+import { appConfig } from '../config';
+import type { IAppConfig } from '../config';
 import * as path from 'path';
 import * as fs from 'fs';
 import { v4 as uuidv4 } from 'uuid'; // Для генерации уникального имени файла
@@ -17,7 +23,8 @@ export class FilesService {
   constructor(
     @InjectRepository(FileEntity)
     private readonly fileRepository: Repository<FileEntity>,
-    private readonly configService: ConfigService,
+    @Inject(appConfig.KEY)
+    private readonly appSettings: IAppConfig,
   ) {}
 
   // Загрузить изображение
@@ -54,11 +61,7 @@ export class FilesService {
       await fs.promises.writeFile(uploadPath, file.buffer);
 
       // Формируем публичную ссылку
-      const baseUrl = this.configService.get(
-        'BASE_URL',
-        'http://localhost:3000',
-      );
-      const publicUrl = `${baseUrl}/public/images/${fileName}`;
+      const publicUrl = `${this.appSettings.baseUrl}/public/images/${fileName}`;
       const relativePath = `public/images/${fileName}`;
 
       // Сохраняем информацию о файле в БД
