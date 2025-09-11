@@ -7,45 +7,57 @@ import { UsersService } from '../users/users.service';
 import { TokensDto } from './dto/tokens.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { RegisterDto } from './dto/register.dto';
 import { ConfigService } from '@nestjs/config';
-import { User } from '../users/entities/user.entity';
 import * as bcrypt from 'bcrypt';
-import { CreateUserDto } from '../users/dto/create-user.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepository: Repository<RefreshToken>,
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
   ) {}
 
-  async register(createUserDto: CreateUserDto): Promise<User> {
-    const existingUser = await this.userRepository.findOne({
-      where: { email: createUserDto.email },
-    });
+  async register(registerDto: RegisterDto): Promise<TokensDto> {
+    const existingUser = await this.usersService.findByEmail(registerDto.email);
 
     if (existingUser) {
-      throw new UnauthorizedException('User already exists with this email');
+      throw new UnauthorizedException(
+        'Пользователь с таким email уже существует',
+      );
     }
 
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-    const user = this.userRepository.create({
-      ...createUserDto,
+    const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+    const user = await this.usersService.create({
+      ...registerDto,
       password: hashedPassword,
     });
-    return this.userRepository.save(user);
+
+    return this.generateTokens(user.id);
+>>>>>>> dd7ef3e (Fixes: Полная функциональность AuthService с безопасностью)
   }
 
   async login(loginDto: LoginDto): Promise<TokensDto> {
     const user = await this.usersService.findByEmail(loginDto.email);
 
+<<<<<<< HEAD
     if (!user || !(await bcrypt.compare(loginDto.password, user.password))) {
       throw new UnauthorizedException('Invalid credentials');
+=======
+    if (!user) {
+      throw new UnauthorizedException('Неверные учетные данные');
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      loginDto.password,
+      user.password,
+    );
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Неверные учетные данные');
+>>>>>>> dd7ef3e (Fixes: Полная функциональность AuthService с безопасностью)
     }
 
     return this.generateTokens(user.id);
@@ -78,19 +90,36 @@ export class AuthService {
   private async generateTokens(userId: string): Promise<TokensDto> {
     const user = await this.usersService.findOne(userId);
 
+    const accessTokenExpiresIn = this.configService.get<string>(
+      'JWT_ACCESS_EXPIRES_IN',
+      '1h',
+    );
+    const refreshTokenExpiresIn = this.configService.get<string>(
+      'JWT_REFRESH_EXPIRES_IN',
+      '7d',
+    );
+
     const accessToken = this.jwtService.sign(
-      { sub: user.id, email: user.email },
+      { sub: user.id, email: user.email, role: user.role },
       {
         secret: this.configService.get<string>('JWT_SECRET'),
-        expiresIn: '15m',
+        expiresIn: accessTokenExpiresIn,
       },
     );
 
     const refreshToken = this.jwtService.sign(
-      { sub: user.id },
       {
-        secret: this.configService.get<string>('JWT_SECRET'),
-        expiresIn: '7d',
+        sub: user.id,
+        email: user.email,
+        role: user.role,
+        tokenType: 'refresh',
+      },
+      {
+        secret: this.configService.get<string>(
+          'JWT_REFRESH_SECRET',
+          'default-refresh-secret',
+        ),
+        expiresIn: refreshTokenExpiresIn,
       },
     );
 
@@ -109,7 +138,12 @@ export class AuthService {
   }
 
   async logoutUser(userId: string) {
-    await this.usersService.removeRefreshToken(userId);
+    // Деактивируем все refresh токены пользователя
+    await this.refreshTokenRepository.update(
+      { userId, isActive: true },
+      { isActive: false },
+    );
+
     return {
       success: true,
       message: 'Выход выполнен успешно',
