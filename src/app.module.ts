@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -7,6 +7,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { SkillsModule } from './skills/skills.module';
+import { WinstonModule } from 'nest-winston';
+import { requestLoggerMiddleware, requestLoggerOptions } from './logger/request-logger.middleware';
 
 @Module({
   imports: [
@@ -33,6 +35,7 @@ import { SkillsModule } from './skills/skills.module';
         secret: config.get('JWT_SECRET'),
       }),
     }),
+    WinstonModule.forRoot(requestLoggerOptions),
     UsersModule,
     AuthModule,
     SkillsModule,
@@ -40,4 +43,10 @@ import { SkillsModule } from './skills/skills.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule{
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(requestLoggerMiddleware)
+      .forRoutes('*')
+  }
+}
