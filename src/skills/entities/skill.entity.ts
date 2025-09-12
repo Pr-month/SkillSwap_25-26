@@ -30,7 +30,4 @@ export class Skill {
 
   @ManyToOne(() => User)
   owner: User;
-
-  @Column()
-  ownerId: string;
 }

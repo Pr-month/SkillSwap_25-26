@@ -28,16 +28,10 @@ export class SkillsService {
   }
 
   async findOne(id: number) {
-    const skill = await this.skillRepository.findOne({
+    return this.skillRepository.findOneOrFail({
       where: { id },
       relations: ['owner'],
     });
-
-    if (!skill) {
-      throw new NotFoundException(`Навык с ID ${id} не найден`);
-    }
-
-    return skill;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -50,7 +44,7 @@ export class SkillsService {
     const skill = await this.findOne(id);
 
     // Проверяем, принадлежит ли навык пользователю
-    if (skill.ownerId !== userId) {
+    if (skill.owner.id !== userId) {
       throw new ForbiddenException('У вас нет прав на удаление этого навыка');
     }
 
