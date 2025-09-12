@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import type { IAppConfig } from './config';
+import { AllExpectionFilter } from './common/all-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -15,6 +16,8 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  app.useGlobalFilters(new AllExpectionFilter())
 
   // Статическая раздача файлов из папки public
   app.useStaticAssets(join(__dirname, '..', 'public'), {
