@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { RefreshTokenStrategy } from './refresh-token.strategy';
 import { UsersService } from '../../users/users.service';
+import { Gender, UserRole } from '../../users/enums';
 import { Request } from 'express';
 
 describe('RefreshTokenStrategy', () => {
@@ -44,9 +45,9 @@ describe('RefreshTokenStrategy', () => {
       about: null,
       birthdate: null,
       city: null,
-      gender: 'male',
+      gender: Gender.MALE,
       avatar: null,
-      role: 'user',
+      role: UserRole.USER,
       createdAt: new Date(),
     };
     jest.spyOn(usersService, 'findOne').mockResolvedValue(mockUser);
@@ -70,7 +71,9 @@ describe('RefreshTokenStrategy', () => {
     expect(result).toEqual({
       userId: 'uuid-123',
       email: 'test@example.com',
+      role: UserRole.USER,
       refreshToken: 'test-refresh-token',
+      tokenType: 'refresh',
     });
   });
 

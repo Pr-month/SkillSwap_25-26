@@ -4,7 +4,10 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 import { UsersService } from '../../users/users.service';
-import { RefreshTokenPayload } from '../interfaces/auth.interface';
+import {
+  RefreshTokenPayload,
+  RefreshTokenUser,
+} from '../interfaces/auth.interface';
 
 @Injectable()
 export class RefreshTokenStrategy extends PassportStrategy(
@@ -29,7 +32,10 @@ export class RefreshTokenStrategy extends PassportStrategy(
     });
   }
 
-  async validate(req: Request, payload: RefreshTokenPayload) {
+  async validate(
+    req: Request,
+    payload: RefreshTokenPayload,
+  ): Promise<RefreshTokenUser> {
     const refreshToken = req.cookies?.refreshToken;
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token not found');
@@ -46,6 +52,12 @@ export class RefreshTokenStrategy extends PassportStrategy(
     }
 
     // TODO: Add refresh token validation against stored token in DB
-    return { userId: user.id, email: user.email, refreshToken };
+    return {
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      refreshToken,
+      tokenType: 'refresh' as const,
+    };
   }
 }

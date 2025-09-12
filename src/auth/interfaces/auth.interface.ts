@@ -40,3 +40,19 @@ export interface RefreshTokenPayload {
   iat?: number;
   exp?: number;
 }
+
+export interface RefreshTokenUser extends AuthenticatedUser {
+  refreshToken: string;
+  tokenType?: 'refresh';
+}
+
+export interface AuthGuardError extends Error {
+  message: string;
+  statusCode?: number;
+}
+
+export interface AuthGuardInfo {
+  message?: string;
+  scope?: string;
+  realm?: string;
+}
