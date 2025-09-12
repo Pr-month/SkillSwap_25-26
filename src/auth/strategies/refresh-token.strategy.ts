@@ -4,6 +4,9 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 import { UsersService } from '../../users/users.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { RefreshToken } from '../entities/refresh-token.entity';
 import {
   RefreshTokenPayload,
   RefreshTokenUser,
@@ -17,11 +20,13 @@ export class RefreshTokenStrategy extends PassportStrategy(
   constructor(
     private configService: ConfigService,
     private usersService: UsersService,
+    @InjectRepository(RefreshToken)
+    private refreshTokenRepository: Repository<RefreshToken>,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: Request): string | null => {
-          return (request?.cookies?.refreshToken as string) || null;
+          return (request?.body?.refreshToken as string) || null;
         },
       ]),
       ignoreExpiration: false,
@@ -36,7 +41,7 @@ export class RefreshTokenStrategy extends PassportStrategy(
     req: Request,
     payload: RefreshTokenPayload,
   ): Promise<RefreshTokenUser> {
-    const refreshToken = req.cookies?.refreshToken;
+    const refreshToken = req.body?.refreshToken;
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token not found');
     }
@@ -46,12 +51,29 @@ export class RefreshTokenStrategy extends PassportStrategy(
       throw new UnauthorizedException('Неверный тип токена');
     }
 
+    // Валидируем токен против БД
+    const tokenEntity = await this.refreshTokenRepository.findOne({
+      where: { token: refreshToken, isActive: true },
+      relations: ['user'],
+    });
+
+    if (!tokenEntity) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    // Проверяем срок действия токена
+    if (new Date() > tokenEntity.expiresAt) {
+      // Деактивируем просроченный токен
+      tokenEntity.isActive = false;
+      await this.refreshTokenRepository.save(tokenEntity);
+      throw new UnauthorizedException('Refresh token expired');
+    }
+
     const user = await this.usersService.findOne(payload.sub);
     if (!user) {
       throw new UnauthorizedException('Пользователь не найден');
     }
 
-    // TODO: Add refresh token validation against stored token in DB
     return {
       userId: user.id,
       email: user.email,
