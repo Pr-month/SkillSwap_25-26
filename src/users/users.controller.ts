@@ -1,5 +1,8 @@
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { AuthenticatedRequest } from '../auth/interfaces/auth.interface';
+import { UserRole } from './enums';
 import {
   Controller,
   Get,
@@ -17,7 +20,6 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
-import { AuthenticatedRequest } from 'src/auth/interfaces/auth.interface';
 
 @Controller('users')
 export class UsersController {
@@ -30,22 +32,29 @@ export class UsersController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   async findAll(): Promise<User[]> {
     return this.usersService.findAll();
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   async findOne(@Param('id') id: string): Promise<User> {
     return this.usersService.findOne(id);
   }
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   async create(@Body() createUserDto: CreateUserDto): Promise<User> {
     return this.usersService.create(createUserDto);
   }
 
   @Patch('me')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.USER, UserRole.ADMIN)
   async updateMe(
     @Request() req: AuthenticatedRequest,
     @Body() updateUserDto: UpdateUserDto,
@@ -55,7 +64,8 @@ export class UsersController {
   }
 
   @Patch('me/password')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.USER, UserRole.ADMIN)
   async updatePassword(
     @Request() req: AuthenticatedRequest,
     @Body() updatePasswordDto: UpdatePasswordDto,
