@@ -8,7 +8,10 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { SkillsModule } from './skills/skills.module';
 import { WinstonModule } from 'nest-winston';
-import { requestLoggerMiddleware, requestLoggerOptions } from './logger/request-logger.middleware';
+import {
+  requestLoggerMiddleware,
+  requestLoggerOptions,
+} from './logger/request-logger.middleware';
 
 @Module({
   imports: [
@@ -43,10 +46,8 @@ import { requestLoggerMiddleware, requestLoggerOptions } from './logger/request-
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule implements NestModule{
+export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(requestLoggerMiddleware)
-      .forRoutes('*')
+    consumer.apply(requestLoggerMiddleware).forRoutes('*');
   }
 }

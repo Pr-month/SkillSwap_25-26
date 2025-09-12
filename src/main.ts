@@ -6,7 +6,7 @@ import { nestLoggerOptions } from './logger/nest-logger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
-    logger: WinstonModule.createLogger(nestLoggerOptions)
+    logger: WinstonModule.createLogger(nestLoggerOptions),
   });
   app.useGlobalPipes(
     new ValidationPipe({
