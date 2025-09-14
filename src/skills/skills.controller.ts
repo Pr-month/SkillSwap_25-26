@@ -13,17 +13,13 @@ import { SkillsService } from './skills.service';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '../users/enums';
 import { AuthenticatedRequest } from '../auth/interfaces/auth.interface';
-
 
 @Controller('skills')
 export class SkillsController {
   constructor(private readonly skillsService: SkillsService) {}
 
- @Post()
+  @Post()
   @UseGuards(JwtAuthGuard)
   async create(@Body() createSkillDto: CreateSkillDto) {
     return this.skillsService.create(createSkillDto);
