@@ -5,37 +5,26 @@ import {
   Post,
   Body,
   Param,
-  ParseIntPipe,
   Patch,
   UseGuards,
   Request,
-  UseGuards,
   Req,
 } from '@nestjs/common';
-
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-
-interface AuthenticatedRequest extends Request {
-  user: {
-    userId: number;
-    email: string;
-  };
-}
-import { create } from 'domain';
+import { AuthenticatedRequest } from '../auth/interfaces/auth.interface';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  async getMe(@Req() req) {
-    return this.usersService.findOne(req.user.id);
+  async getMe(@Req() req: AuthenticatedRequest) {
+    return this.usersService.findOne(req.user.userId);
   }
 
   @Get()
@@ -44,7 +33,7 @@ export class UsersController {
   }
 
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: string): Promise<User> {
+  async findOne(@Param('id') id: string): Promise<User> {
     return this.usersService.findOne(id);
   }
 
@@ -73,4 +62,3 @@ export class UsersController {
     return this.usersService.updatePassword(userId, updatePasswordDto);
   }
 }
-
