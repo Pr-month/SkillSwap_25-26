@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './jwt.strategy';
 import { UsersService } from '../../users/users.service';
+import { Gender, UserRole } from '../../users/enums';
 
 describe('JwtStrategy', () => {
   let strategy: JwtStrategy;
@@ -43,9 +44,9 @@ describe('JwtStrategy', () => {
       about: null,
       birthdate: null,
       city: null,
-      gender: 'male',
+      gender: Gender.MALE,
       avatar: null,
-      role: 'user',
+      role: UserRole.USER,
       createdAt: new Date(),
     };
     jest.spyOn(usersService, 'findOne').mockResolvedValue(mockUser as any);
