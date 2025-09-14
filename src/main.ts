@@ -10,8 +10,8 @@ import type { IAppConfig } from './config';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-      logger: WinstonModule.createLogger(nestLoggerOptions),
-    );
+    logger: WinstonModule.createLogger(nestLoggerOptions),
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
