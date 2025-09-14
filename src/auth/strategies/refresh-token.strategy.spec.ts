@@ -37,17 +37,24 @@ describe('RefreshTokenStrategy', () => {
 
   it('should validate refresh token payload correctly', async () => {
     const mockUser = {
-      id: 1,
+      id: 'uuid-123',
       email: 'test@example.com',
       name: 'Test User',
       password: 'hashedpassword',
+      about: null,
+      birthdate: null,
+      city: null,
+      gender: 'male',
+      avatar: null,
+      role: 'user',
       createdAt: new Date(),
     };
     jest.spyOn(usersService, 'findOne').mockResolvedValue(mockUser);
 
     const payload = {
-      sub: 1,
+      sub: 'uuid-123',
       email: 'test@example.com',
+      role: 'user',
       tokenType: 'refresh' as const,
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 3600,
@@ -61,7 +68,7 @@ describe('RefreshTokenStrategy', () => {
     const result = await strategy.validate(req, payload);
 
     expect(result).toEqual({
-      userId: 1,
+      userId: 'uuid-123',
       email: 'test@example.com',
       refreshToken: 'test-refresh-token',
     });
@@ -69,8 +76,9 @@ describe('RefreshTokenStrategy', () => {
 
   it('should throw UnauthorizedException for invalid token type', async () => {
     const payload = {
-      sub: 1,
+      sub: 'uuid-123',
       email: 'test@example.com',
+      role: 'user',
       tokenType: 'access' as any, // Неверный тип токена
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 3600,
@@ -89,8 +97,9 @@ describe('RefreshTokenStrategy', () => {
 
   it('should throw UnauthorizedException when refresh token is missing', async () => {
     const payload = {
-      sub: 1,
+      sub: 'uuid-123',
       email: 'test@example.com',
+      role: 'user',
       tokenType: 'refresh' as const,
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 3600,

@@ -10,7 +10,12 @@ import * as path from 'path';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { Skill } from './entities/skill.entity';
-
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { CreateSkillDto } from './dto/create-skill.dto';
+import { UpdateSkillDto } from './dto/update-skill.dto';
+import { Skill } from './entities/skill.entity';
 @Injectable()
 export class SkillsService {
   constructor(
@@ -18,9 +23,9 @@ export class SkillsService {
     private skillRepository: Repository<Skill>,
   ) {}
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  create(_createSkillDto: CreateSkillDto) {
-    return 'This action adds a new skill';
+  async create(createSkillDto: CreateSkillDto): Promise<Skill> {
+    const skill = this.skillRepository.create(createSkillDto);
+    return this.skillRepository.save(skill);
   }
 
   findAll() {
@@ -34,12 +39,20 @@ export class SkillsService {
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  update(id: number, _updateSkillDto: UpdateSkillDto) {
-    return `This action updates a #${id} skill`;
+  async update(id: string, updateSkillDto: UpdateSkillDto) {
+    const skillId = parseInt(id, 10);
+    const skill = await this.skillRepository.findOneBy({ id: skillId });
+    if (!skill) {
+      throw new NotFoundException('Skill not found');
+    }
+    Object.assign(skill, updateSkillDto);
+    return this.skillRepository.save(skill);
   }
-
-  async remove(id: number, userId: string) {
+  remove(id: number) {
+    return `This action removes a #${id} skill`;
+  }
+  
+    async remove(id: number, userId: string) {
     // Получаем навык с информацией о владельце
     const skill = await this.findOne(id);
 
@@ -89,5 +102,4 @@ export class SkillsService {
         console.error(`Ошибка при удалении файла ${imagePath}:`, error);
       }
     }
-  }
 }

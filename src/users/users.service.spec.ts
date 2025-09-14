@@ -6,6 +6,7 @@ import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { Gender, UserRole } from './enums';
 
 // Мокаем bcrypt
 jest.mock('bcrypt', () => ({
@@ -13,7 +14,22 @@ jest.mock('bcrypt', () => ({
   hash: jest.fn(),
 }));
 
-const mockedBcrypt = bcrypt;
+// Helper функция для создания mock пользователя
+const createMockUser = (overrides: Partial<User> = {}): User => ({
+  id: 'uuid-123',
+  name: 'Test User',
+  email: 'test@example.com',
+  password: 'hashedpassword',
+  about: null,
+  birthdate: null,
+  city: null,
+  gender: Gender.MALE,
+  avatar: null,
+  role: UserRole.USER,
+  ...overrides,
+});
+
+const mockedBcrypt = bcrypt as jest.Mocked<typeof bcrypt>;
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -50,23 +66,21 @@ describe('UsersService', () => {
 
   describe('update', () => {
     it('should update user successfully', async () => {
-      const userId = 1;
+      const userId = 'uuid-123';
       const updateUserDto: UpdateUserDto = { name: 'Updated Name' };
-      const existingUser = {
+      const existingUser = createMockUser({
         id: userId,
         name: 'Old Name',
-        email: 'test@example.com',
         password: 'password',
-        createdAt: new Date(),
-      };
+      });
       const updatedUser = { ...existingUser, ...updateUserDto };
 
       const findOneSpy = jest
         .spyOn(service, 'findOne')
-        .mockResolvedValue(existingUser as User);
+        .mockResolvedValue(existingUser);
       const saveSpy = jest
         .spyOn(repository, 'save')
-        .mockResolvedValue(updatedUser as User);
+        .mockResolvedValue(updatedUser);
 
       const result = await service.update(userId, updateUserDto);
 
@@ -76,7 +90,7 @@ describe('UsersService', () => {
     });
 
     it('should throw NotFoundException if user not found', async () => {
-      const userId = 999;
+      const userId = 'uuid-999';
       const updateUserDto: UpdateUserDto = { name: 'Updated Name' };
 
       jest
@@ -89,20 +103,17 @@ describe('UsersService', () => {
 
   describe('updatePassword', () => {
     it('should update password successfully', async () => {
-      const userId = 1;
+      const userId = 'uuid-123';
       const updatePasswordDto: UpdatePasswordDto = {
         currentPassword: 'oldPassword',
         newPassword: 'newPassword123',
       };
       const hashedOldPassword = 'hashedOldPassword';
       const hashedNewPassword = 'hashedNewPassword';
-      const existingUser = {
+      const existingUser = createMockUser({
         id: userId,
-        name: 'Test User',
-        email: 'test@example.com',
         password: hashedOldPassword,
-        createdAt: new Date(),
-      };
+      });
       const updatedUser = { ...existingUser, password: hashedNewPassword };
 
       // Мокаем bcrypt.compare для проверки текущего пароля
@@ -112,10 +123,10 @@ describe('UsersService', () => {
 
       const findOneSpy = jest
         .spyOn(service, 'findOne')
-        .mockResolvedValue(existingUser as User);
+        .mockResolvedValue(existingUser);
       const saveSpy = jest
         .spyOn(repository, 'save')
-        .mockResolvedValue(updatedUser as User);
+        .mockResolvedValue(updatedUser);
 
       const result = await service.updatePassword(userId, updatePasswordDto);
 
@@ -130,24 +141,21 @@ describe('UsersService', () => {
     });
 
     it('should throw UnauthorizedException if current password is incorrect', async () => {
-      const userId = 1;
+      const userId = 'uuid-123';
       const updatePasswordDto: UpdatePasswordDto = {
         currentPassword: 'wrongPassword',
         newPassword: 'newPassword123',
       };
       const hashedPassword = 'hashedPassword';
-      const existingUser = {
+      const existingUser = createMockUser({
         id: userId,
-        name: 'Test User',
-        email: 'test@example.com',
         password: hashedPassword,
-        createdAt: new Date(),
-      };
+      });
 
       // Мокаем bcrypt.compare для возврата false (неверный пароль)
       (mockedBcrypt.compare as any).mockResolvedValue(false);
 
-      jest.spyOn(service, 'findOne').mockResolvedValue(existingUser as User);
+      jest.spyOn(service, 'findOne').mockResolvedValue(existingUser);
 
       await expect(
         service.updatePassword(userId, updatePasswordDto),
@@ -161,7 +169,7 @@ describe('UsersService', () => {
     });
 
     it('should throw NotFoundException if user not found', async () => {
-      const userId = 999;
+      const userId = 'uuid-999';
       const updatePasswordDto: UpdatePasswordDto = {
         currentPassword: 'oldPassword',
         newPassword: 'newPassword123',
@@ -182,18 +190,15 @@ describe('UsersService', () => {
       const email = 'test@example.com';
       const password = 'password123';
       const hashedPassword = 'hashedPassword';
-      const user = {
-        id: 1,
-        name: 'Test User',
+      const user = createMockUser({
         email,
         password: hashedPassword,
-        createdAt: new Date(),
-      };
+      });
 
       // Мокаем findByEmail
       const findByEmailSpy = jest
         .spyOn(service, 'findByEmail')
-        .mockResolvedValue(user as User);
+        .mockResolvedValue(user);
       // Мокаем bcrypt.compare для возврата true
       (mockedBcrypt.compare as any).mockResolvedValue(true);
 
@@ -227,18 +232,15 @@ describe('UsersService', () => {
       const email = 'test@example.com';
       const password = 'wrongPassword';
       const hashedPassword = 'hashedPassword';
-      const user = {
-        id: 1,
-        name: 'Test User',
+      const user = createMockUser({
         email,
         password: hashedPassword,
-        createdAt: new Date(),
-      };
+      });
 
       // Мокаем findByEmail
       const findByEmailSpy = jest
         .spyOn(service, 'findByEmail')
-        .mockResolvedValue(user as User);
+        .mockResolvedValue(user);
       // Мокаем bcrypt.compare для возврата false
       (mockedBcrypt.compare as any).mockResolvedValue(false);
 
