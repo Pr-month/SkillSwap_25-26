@@ -1,9 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
+import { QueryBuilder, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import * as fs from 'fs';
+import * as path from 'path';
 import { Skill } from './entities/skill.entity';
+import { GetSkillsDto } from './dto/get-skills.dto';
+
 @Injectable()
 export class SkillsService {
   constructor(
@@ -16,12 +24,11 @@ export class SkillsService {
     return this.skillRepository.save(skill);
   }
 
-  findAll() {
-    return `This action returns all skills`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} skill`;
+  async findOne(id: number) {
+    return this.skillRepository.findOneOrFail({
+      where: { id },
+      relations: ['owner'],
+    });
   }
 
   async update(id: string, updateSkillDto: UpdateSkillDto) {
@@ -33,7 +40,114 @@ export class SkillsService {
     Object.assign(skill, updateSkillDto);
     return this.skillRepository.save(skill);
   }
-  remove(id: number) {
-    return `This action removes a #${id} skill`;
+
+  async remove(id: number, userId: string) {
+    // Получаем навык с информацией о владельце
+    const skill = await this.findOne(id);
+
+    // Проверяем, принадлежит ли навык пользователю
+    if (skill.owner.id !== userId) {
+      throw new ForbiddenException('У вас нет прав на удаление этого навыка');
+    }
+
+    // Удаляем изображения из файловой системы
+    this.deleteSkillImages(skill.images);
+
+    // Удаляем запись из базы данных
+    const result = await this.skillRepository.delete(id);
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`Навык с ID ${id} не найден`);
+    }
+
+    return { message: `Навык успешно удален` };
+  }
+
+  /**
+   * Удаляет изображения навыка из файловой системы
+   */
+  private deleteSkillImages(images: string[]): void {
+    if (!images || images.length === 0) {
+      return;
+    }
+
+    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+
+    for (const imagePath of images) {
+      if (!imagePath) continue;
+
+      try {
+        // Получаем только имя файла из пути
+        const filename = path.basename(imagePath);
+        const fullPath = path.join(uploadsDir, filename);
+
+        if (fs.existsSync(fullPath)) {
+          fs.unlinkSync(fullPath);
+          console.log(`Файл успешно удален: ${fullPath}`);
+        } else {
+          console.log(`Файл не найден: ${fullPath}`);
+        }
+      } catch (error) {
+        console.error(`Ошибка при удалении файла ${imagePath}:`, error);
+      }
+    }
+  }
+
+  async getSkills({
+    page,
+    limit,
+    search,
+    category,
+  }: GetSkillsDto): Promise<[Skill[], number]> {
+    const skip = (page - 1) * limit;
+
+    return await this.skillRepository
+      .createQueryBuilder('skill')
+      .leftJoinAndSelect('skill.category', 'category')
+      .leftJoinAndSelect('category.parent', 'parent')
+      .where(() => {
+        if (search) {
+          return this.buildSearchCondition(search);
+        }
+      })
+      .andWhere(() => {
+        if (category) {
+          return this.buildCategoryCondition(category);
+        }
+      })
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+  }
+
+  private buildSearchCondition(search: string): QueryBuilder<Skill> {
+    const queryBuilder = this.skillRepository.createQueryBuilder('skill');
+
+    if (search) {
+      queryBuilder
+        .where('LOWER(skill.title) LIKE :search', {
+          search: `%${search.toLowerCase()}%`,
+        })
+        .orWhere('LOWER(category.name) LIKE :search', {
+          search: `%${search.toLowerCase()}%`,
+        })
+        .orWhere('LOWER(parent.name) LIKE :search', {
+          search: `%${search.toLowerCase()}%`,
+        });
+    }
+
+    return queryBuilder;
+  }
+
+  private buildCategoryCondition(category: string): QueryBuilder<Skill> {
+    const queryBuilder = this.skillRepository.createQueryBuilder('skill');
+
+    if (category) {
+      queryBuilder
+        .where('category.name = :category', { category })
+        .orWhere('parent.name = :category', { category });
+    }
+
+    return queryBuilder;
   }
 }
