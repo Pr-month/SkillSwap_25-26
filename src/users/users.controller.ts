@@ -1,5 +1,4 @@
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { AuthenticatedRequest } from '../auth/interfaces/auth.interface';
 import {
   Controller,
   Get,
@@ -11,13 +10,12 @@ import {
   Request,
   Req,
 } from '@nestjs/common';
-
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
-import { AuthenticatedRequest } from 'src/auth/interfaces/auth.interface';
+import { AuthenticatedRequest } from '../auth/interfaces/auth.interface';
 
 @Controller('users')
 export class UsersController {
