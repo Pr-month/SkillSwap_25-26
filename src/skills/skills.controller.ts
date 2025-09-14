@@ -1,7 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  NotFoundException,
+  Query,
+} from '@nestjs/common';
 import { SkillsService } from './skills.service';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
+import { GetSkillsDto } from './dto/get-skills.dto';
+import { SkillsResponse } from './dto/skills-response.dto';
 
 @Controller('skills')
 export class SkillsController {
@@ -13,10 +25,27 @@ export class SkillsController {
   }
 
   @Get()
-  findAll() {
-    return this.skillsService.findAll();
-  }
+  async getSkills(@Query() query: GetSkillsDto): Promise<SkillsResponse> {
+    const { page, limit, search, category } = query;
+    const [skills, total] = await this.skillsService.getSkills(
+      page,
+      limit,
+      search,
+      category,
+    );
 
+    const totalPages = Math.ceil(total / limit);
+
+    if (page > totalPages) {
+      throw new NotFoundException('Страница не найдена');
+    }
+
+    return {
+      data: skills,
+      page,
+      totalPages,
+    };
+  }
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.skillsService.findOne(+id);
