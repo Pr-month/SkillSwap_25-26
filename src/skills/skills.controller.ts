@@ -6,12 +6,18 @@ import {
   Patch,
   Param,
   Delete,
+  NotFoundException,
+  Query,
+  UseGuards,
   UseGuards,
   Req,
 } from '@nestjs/common';
 import { SkillsService } from './skills.service';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
+import { GetSkillsDto } from './dto/get-skills.dto';
+import { SkillsResponse } from './dto/skills-response.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AuthenticatedRequest } from '../auth/interfaces/auth.interface';
 
@@ -26,10 +32,27 @@ export class SkillsController {
   }
 
   @Get()
-  findAll() {
-    return this.skillsService.findAll();
-  }
+  async getSkills(@Query() query: GetSkillsDto): Promise<SkillsResponse> {
+    const { page, limit, search, category } = query;
+    const [skills, total] = await this.skillsService.getSkills(
+      page,
+      limit,
+      search,
+      category,
+    );
 
+    const totalPages = Math.ceil(total / limit);
+
+    if (page > totalPages) {
+      throw new NotFoundException('Страница не найдена');
+    }
+
+    return {
+      data: skills,
+      page,
+      totalPages,
+    };
+  }
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.skillsService.findOne(+id);
