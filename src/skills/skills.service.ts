@@ -1,20 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { QueryBuilder, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import * as fs from 'fs';
 import * as path from 'path';
-import { CreateSkillDto } from './dto/create-skill.dto';
-import { UpdateSkillDto } from './dto/update-skill.dto';
 import { Skill } from './entities/skill.entity';
+import { GetSkillsDto } from './dto/get-skills.dto';
 
 @Injectable()
 export class SkillsService {
@@ -26,10 +22,6 @@ export class SkillsService {
   async create(createSkillDto: CreateSkillDto): Promise<Skill> {
     const skill = this.skillRepository.create(createSkillDto);
     return this.skillRepository.save(skill);
-  }
-
-  findAll() {
-    return this.skillRepository.find({ relations: ['owner'] });
   }
 
   async findOne(id: number) {
@@ -101,12 +93,12 @@ export class SkillsService {
     }
   }
 
-  async getSkills(
-    page: number,
-    limit: number,
-    search: string,
-    category: string,
-  ): Promise<[Skill[], number]> {
+  async getSkills({
+    page,
+    limit,
+    search,
+    category,
+  }: GetSkillsDto): Promise<[Skill[], number]> {
     const skip = (page - 1) * limit;
 
     return await this.skillRepository

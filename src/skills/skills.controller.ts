@@ -1,25 +1,21 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
-  NotFoundException,
+  Get,
+  Param,
+  Patch,
+  Post,
   Query,
-  UseGuards,
-  UseGuards,
   Req,
+  UseGuards,
 } from '@nestjs/common';
-import { SkillsService } from './skills.service';
-import { CreateSkillDto } from './dto/create-skill.dto';
-import { UpdateSkillDto } from './dto/update-skill.dto';
-import { GetSkillsDto } from './dto/get-skills.dto';
-import { SkillsResponse } from './dto/skills-response.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AuthenticatedRequest } from '../auth/interfaces/auth.interface';
+import { CreateSkillDto } from './dto/create-skill.dto';
+import { GetSkillsDto } from './dto/get-skills.dto';
+import { UpdateSkillDto } from './dto/update-skill.dto';
+import { SkillsService } from './skills.service';
 
 @Controller('skills')
 export class SkillsController {
@@ -32,26 +28,8 @@ export class SkillsController {
   }
 
   @Get()
-  async getSkills(@Query() query: GetSkillsDto): Promise<SkillsResponse> {
-    const { page, limit, search, category } = query;
-    const [skills, total] = await this.skillsService.getSkills(
-      page,
-      limit,
-      search,
-      category,
-    );
-
-    const totalPages = Math.ceil(total / limit);
-
-    if (page > totalPages) {
-      throw new NotFoundException('Страница не найдена');
-    }
-
-    return {
-      data: skills,
-      page,
-      totalPages,
-    };
+  async getSkills(@Query() query: GetSkillsDto) {
+    return this.skillsService.getSkills(query);
   }
   @Get(':id')
   findOne(@Param('id') id: string) {

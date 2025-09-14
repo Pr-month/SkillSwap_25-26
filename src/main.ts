@@ -22,7 +22,7 @@ async function bootstrap() {
     }),
   );
 
-  app.useGlobalFilters(new AllExpectionFilter())
+  app.useGlobalFilters(new AllExpectionFilter());
 
   // Статическая раздача файлов из папки public
   app.useStaticAssets(join(__dirname, '..', 'public'), {
