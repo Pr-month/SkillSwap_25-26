@@ -1,3 +1,5 @@
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
@@ -7,6 +9,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { SkillsModule } from './skills/skills.module';
+import { WinstonModule } from 'nest-winston';
+import {
+  requestLoggerMiddleware,
+  requestLoggerOptions,
+} from './logger/request-logger.middleware';
 import { FilesModule } from './files/files.module';
 import { appConfig, jwtConfig, databaseConfig } from './config';
 import type { IJwtConfig, IDatabaseConfig } from './config';
@@ -43,6 +50,7 @@ import { RequestsModule } from './requests/requests.module';
         },
       }),
     }),
+    WinstonModule.forRoot(requestLoggerOptions),
     UsersModule,
     AuthModule,
     SkillsModule,
@@ -52,4 +60,8 @@ import { RequestsModule } from './requests/requests.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(requestLoggerMiddleware).forRoutes('*');
+  }
+}
