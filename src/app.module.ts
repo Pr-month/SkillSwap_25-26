@@ -10,6 +10,7 @@ import { SkillsModule } from './skills/skills.module';
 import { FilesModule } from './files/files.module';
 import { appConfig, jwtConfig, databaseConfig } from './config';
 import type { IJwtConfig, IDatabaseConfig } from './config';
+import { RequestsModule } from './requests/requests.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import type { IJwtConfig, IDatabaseConfig } from './config';
     AuthModule,
     SkillsModule,
     FilesModule,
+    RequestsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
