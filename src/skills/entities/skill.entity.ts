@@ -1,5 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
-// import { User } from '../../users/entities/user.entity';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import { User } from '../../users/entities/user.entity';
 
 @Entity({ name: 'skills' })
 export class Skill {
@@ -28,6 +28,6 @@ export class Skill {
   })
   images: string[];
 
-  // @ManyToOne(() => User, user => user.skills)
-  // owner: User;
+  @ManyToOne(() => User)
+  owner: User;
 }

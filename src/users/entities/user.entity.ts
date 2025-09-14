@@ -18,13 +18,13 @@ export class User {
   password: string;
 
   @Column({ type: 'text', nullable: true })
-  about: string | null;
+  about: string;
 
   @Column({ type: 'date', nullable: true })
-  birthdate: Date | null;
+  birthdate: Date;
 
   @Column({ type: 'varchar', nullable: true })
-  city: string | null;
+  city: string;
 
   @Column({
     type: 'enum',
@@ -33,7 +33,7 @@ export class User {
   gender: Gender;
 
   @Column({ type: 'varchar', nullable: true })
-  avatar: string | null;
+  avatar: string;
 
   // @ManyToMany(() => Skill, skill => skill.owners, { eager: true })
   // skills: Skill[];
