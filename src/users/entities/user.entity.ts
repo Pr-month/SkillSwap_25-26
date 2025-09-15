@@ -1,10 +1,28 @@
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Exclude } from 'class-transformer';
 import { Gender, UserRole } from '../enums';
 // import { Skill } from './skill.entity';
 // import { Category } from './category.entity';
 
 @Entity('users')
 export class User {
+  // Константы для селектов полей (статические для переиспользования)
+  static readonly SELECT_FIELDS: (keyof User)[] = [
+    'id',
+    'name',
+    'email',
+    'about',
+    'birthdate',
+    'city',
+    'gender',
+    'avatar',
+    'role',
+  ];
+
+  static readonly SELECT_WITH_PASSWORD: (keyof User)[] = [
+    ...User.SELECT_FIELDS,
+    'password',
+  ];
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -15,6 +33,7 @@ export class User {
   email: string;
 
   @Column({ type: 'varchar' })
+  @Exclude() // Исключаем пароль из всех ответов API
   password: string;
 
   @Column({ type: 'text', nullable: true })
