@@ -104,37 +104,7 @@ export class SkillsService {
 
     return { message: 'Навык успешно добавлен в избранное' };
   }
-
-  async removeFromFavorites(
-    skillId: number,
-    userId: string,
-  ): Promise<{ message: string }> {
-    // Получаем пользователя с избранными навыками
-    const user = await this.userRepository.findOne({
-      where: { id: userId },
-      relations: ['favoriteSkills'],
-    });
-
-    if (!user) {
-      throw new NotFoundException(`Пользователь с ID ${userId} не найден`);
-    }
-
-    // Проверяем, есть ли навык в избранном
-    const favoriteSkillIndex = user.favoriteSkills.findIndex(
-      (favSkill) => favSkill.id === skillId,
-    );
-
-    if (favoriteSkillIndex === -1) {
-      throw new NotFoundException('Навык не найден в избранном');
-    }
-
-    // Удаляем навык из избранного
-    user.favoriteSkills.splice(favoriteSkillIndex, 1);
-    await this.userRepository.save(user);
-
-    return { message: 'Навык успешно удален из избранного' };
-  }
-
+  
   /**
    * Удаляет изображения навыка из файловой системы
    */
