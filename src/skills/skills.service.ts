@@ -10,12 +10,7 @@ import * as path from 'path';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { Skill } from './entities/skill.entity';
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CreateSkillDto } from './dto/create-skill.dto';
-import { UpdateSkillDto } from './dto/update-skill.dto';
-import { Skill } from './entities/skill.entity';
+
 @Injectable()
 export class SkillsService {
   constructor(
@@ -48,11 +43,8 @@ export class SkillsService {
     Object.assign(skill, updateSkillDto);
     return this.skillRepository.save(skill);
   }
-  remove(id: number) {
-    return `This action removes a #${id} skill`;
-  }
-  
-    async remove(id: number, userId: string) {
+
+  async remove(id: number, userId: string) {
     // Получаем навык с информацией о владельце
     const skill = await this.findOne(id);
 
@@ -102,4 +94,5 @@ export class SkillsService {
         console.error(`Ошибка при удалении файла ${imagePath}:`, error);
       }
     }
+  }
 }
