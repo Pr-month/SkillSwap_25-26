@@ -1,4 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  ManyToMany,
+} from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
 @Entity({ name: 'skills' })
@@ -30,4 +36,7 @@ export class Skill {
 
   @ManyToOne(() => User)
   owner: User;
+
+  @ManyToMany(() => User, (user) => user.favoriteSkills)
+  favoritedBy: User[];
 }
