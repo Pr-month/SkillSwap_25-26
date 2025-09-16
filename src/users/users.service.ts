@@ -48,13 +48,8 @@ export class UsersService {
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    // Хешируем пароль перед сохранением
-    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-
-    const user = this.usersRepository.create({
-      ...createUserDto,
-      password: hashedPassword,
-    });
+    // Пароль уже должен быть захеширован в AuthService
+    const user = this.usersRepository.create(createUserDto);
 
     return this.usersRepository.save(user);
   }
@@ -70,7 +65,7 @@ export class UsersService {
   async findByEmail(email: string): Promise<User | null> {
     return this.usersRepository.findOne({ where: { email } });
   }
-  
+
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id);
 

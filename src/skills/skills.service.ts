@@ -1,15 +1,16 @@
 import {
-  ForbiddenException,
   Injectable,
   NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import * as fs from 'fs';
-import * as path from 'path';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
+import { QueryBuilder, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import * as fs from 'fs';
+import * as path from 'path';
 import { Skill } from './entities/skill.entity';
+import { GetSkillsDto } from './dto/get-skills.dto';
 
 @Injectable()
 export class SkillsService {
@@ -21,10 +22,6 @@ export class SkillsService {
   async create(createSkillDto: CreateSkillDto): Promise<Skill> {
     const skill = this.skillRepository.create(createSkillDto);
     return this.skillRepository.save(skill);
-  }
-
-  findAll() {
-    return this.skillRepository.find({ relations: ['owner'] });
   }
 
   async findOne(id: number) {
@@ -94,5 +91,63 @@ export class SkillsService {
         console.error(`Ошибка при удалении файла ${imagePath}:`, error);
       }
     }
+  }
+
+  async getSkills({
+    page,
+    limit,
+    search,
+    category,
+  }: GetSkillsDto): Promise<[Skill[], number]> {
+    const skip = (page - 1) * limit;
+
+    return await this.skillRepository
+      .createQueryBuilder('skill')
+      .leftJoinAndSelect('skill.category', 'category')
+      .leftJoinAndSelect('category.parent', 'parent')
+      .where(() => {
+        if (search) {
+          return this.buildSearchCondition(search);
+        }
+      })
+      .andWhere(() => {
+        if (category) {
+          return this.buildCategoryCondition(category);
+        }
+      })
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount();
+  }
+
+  private buildSearchCondition(search: string): QueryBuilder<Skill> {
+    const queryBuilder = this.skillRepository.createQueryBuilder('skill');
+
+    if (search) {
+      queryBuilder
+        .where('LOWER(skill.title) LIKE :search', {
+          search: `%${search.toLowerCase()}%`,
+        })
+        .orWhere('LOWER(category.name) LIKE :search', {
+          search: `%${search.toLowerCase()}%`,
+        })
+        .orWhere('LOWER(parent.name) LIKE :search', {
+          search: `%${search.toLowerCase()}%`,
+        });
+    }
+
+    return queryBuilder;
+  }
+
+  private buildCategoryCondition(category: string): QueryBuilder<Skill> {
+    const queryBuilder = this.skillRepository.createQueryBuilder('skill');
+
+    if (category) {
+      queryBuilder
+        .where('category.name = :category', { category })
+        .orWhere('parent.name = :category', { category });
+    }
+
+    return queryBuilder;
   }
 }
