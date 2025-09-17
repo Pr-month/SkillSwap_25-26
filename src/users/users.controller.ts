@@ -5,37 +5,41 @@ import {
   Post,
   Body,
   Param,
-  ParseIntPipe,
   Patch,
   UseGuards,
   Request,
   Req,
+  Query,
 } from '@nestjs/common';
-
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
-import { AuthenticatedRequest } from 'src/auth/interfaces/auth.interface';
+import { AuthenticatedRequest } from '../auth/interfaces/auth.interface';
+import { PaginationDto } from './dto/pagination.dto';
+import { PaginatedUsersResponseDto } from './dto/paginated-users-response.dto';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) { }
+  constructor(private readonly usersService: UsersService) {}
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
-  async getMe(@Req() req) {
-    return this.usersService.findOne(req.user.id);
+  async getMe(@Req() req: AuthenticatedRequest) {
+    return this.usersService.findOne(req.user.userId);
   }
 
   @Get()
-  async findAll(): Promise<User[]> {
-    return this.usersService.findAll();
+  async findAll(
+    @Query() paginationDto: PaginationDto
+  ): Promise<PaginatedUsersResponseDto> {
+    const { page = 1, limit = 20 } = paginationDto;
+    return this.usersService.findAllPaginated(page, limit);
   }
 
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: string): Promise<User> {
+  async findOne(@Param('id') id: string): Promise<User> {
     return this.usersService.findOne(id);
   }
 
@@ -64,4 +68,3 @@ export class UsersController {
     return this.usersService.updatePassword(userId, updatePasswordDto);
   }
 }
-
