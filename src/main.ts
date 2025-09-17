@@ -1,6 +1,6 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { WinstonModule } from 'nest-winston';
 import { nestLoggerOptions } from './logger/nest-logger';
 import { ConfigService } from '@nestjs/config';
@@ -21,6 +21,9 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  // Глобальный сериализатор для автоматического исключения полей с @Exclude()
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   app.useGlobalFilters(new AllExpectionFilter());
 

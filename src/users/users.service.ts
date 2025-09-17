@@ -37,8 +37,29 @@ export class UsersService {
     return user;
   }
 
+  // Находит пользователя по ID с паролем (для внутреннего использования)
+  private async findOneWithPassword(id: string): Promise<User> {
+    const user = await this.usersRepository.findOne({
+      where: { id },
+      select: User.SELECT_WITH_PASSWORD,
+    });
+    if (!user) {
+      throw new NotFoundException(`Пользователь с ID ${id} не найден`);
+    }
+    return user;
+  }
+
+  // Находит по email (возвращает без пароля)
   async findByEmail(email: string): Promise<User | null> {
     return this.usersRepository.findOne({ where: { email } });
+  }
+
+  // Находит по email (возвращает с паролем)
+  async findByEmailWithPassword(email: string): Promise<User | null> {
+    return this.usersRepository.findOne({
+      where: { email },
+      select: User.SELECT_WITH_PASSWORD,
+    });
   }
 
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
@@ -54,7 +75,8 @@ export class UsersService {
     id: string,
     updatePasswordDto: UpdatePasswordDto,
   ): Promise<User> {
-    const user = await this.findOne(id);
+    // Получаем пользователя с паролем для валидации
+    const user = await this.findOneWithPassword(id);
 
     // Проверяем текущий пароль с помощью bcrypt
     const isCurrentPasswordValid = await bcrypt.compare(
@@ -83,7 +105,7 @@ export class UsersService {
     email: string,
     password: string,
   ): Promise<User | null> {
-    const user = await this.findByEmail(email);
+    const user = await this.findByEmailWithPassword(email);
     if (!user) {
       return null;
     }

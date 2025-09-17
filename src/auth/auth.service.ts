@@ -40,7 +40,10 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto): Promise<TokensDto> {
-    const user = await this.usersService.findByEmail(loginDto.email);
+    // Используем метод с паролем для аутентификации
+    const user = await this.usersService.findByEmailWithPassword(
+      loginDto.email,
+    );
 
     if (!user) {
       throw new UnauthorizedException('Неверные учетные данные');
