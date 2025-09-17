@@ -50,4 +50,14 @@ export class SkillsController {
     const userId = request.user.userId;
     return this.skillsService.remove(+id, userId);
   }
+
+  @Post(':id/favorite')
+  @UseGuards(JwtAuthGuard)
+  async addToFavorites(
+    @Param('id') id: string,
+    @Req() request: AuthenticatedRequest,
+  ) {
+    const userId = request.user.userId;
+    return this.skillsService.addToFavorites(+id, userId);
+  }
 }

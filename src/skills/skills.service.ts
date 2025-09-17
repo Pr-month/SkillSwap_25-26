@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  ConflictException,
 } from '@nestjs/common';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
@@ -11,12 +12,15 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Skill } from './entities/skill.entity';
 import { GetSkillsDto } from './dto/get-skills.dto';
+import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class SkillsService {
   constructor(
     @InjectRepository(Skill)
     private skillRepository: Repository<Skill>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
   ) {}
 
   async create(createSkillDto: CreateSkillDto): Promise<Skill> {
@@ -63,6 +67,44 @@ export class SkillsService {
     return { message: `Навык успешно удален` };
   }
 
+  async addToFavorites(
+    skillId: number,
+    userId: string,
+  ): Promise<{ message: string }> {
+    // Проверяем существование навыка
+    const skill = await this.skillRepository.findOne({
+      where: { id: skillId },
+    });
+    if (!skill) {
+      throw new NotFoundException(`Навык с ID ${skillId} не найден`);
+    }
+
+    // Получаем пользователя с избранными навыками
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['favoriteSkills'],
+    });
+
+    if (!user) {
+      throw new NotFoundException(`Пользователь с ID ${userId} не найден`);
+    }
+
+    // Проверяем, есть ли уже навык в избранном
+    const isAlreadyFavorite = user.favoriteSkills.some(
+      (favSkill) => favSkill.id === skillId,
+    );
+
+    if (isAlreadyFavorite) {
+      throw new ConflictException('Навык уже находится в избранном');
+    }
+
+    // Добавляем навык в избранное
+    user.favoriteSkills.push(skill);
+    await this.userRepository.save(user);
+
+    return { message: 'Навык успешно добавлен в избранное' };
+  }
+  
   /**
    * Удаляет изображения навыка из файловой системы
    */
