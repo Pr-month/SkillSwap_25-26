@@ -4,4 +4,4 @@ export class PaginatedUsersResponseDto {
   data: User[];
   page: number;
   totalPages: number;
-} 
+}
