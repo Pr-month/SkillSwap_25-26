@@ -10,6 +10,7 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
+import { PaginatedUsersResponseDto } from './dto/paginated-users-response.dto';
 
 @Injectable()
 export class UsersService {
@@ -20,6 +21,30 @@ export class UsersService {
 
   async findAll(): Promise<User[]> {
     return this.usersRepository.find();
+  }
+
+  async findAllPaginated(
+    page: number = 1,
+    limit: number = 20,
+  ): Promise<PaginatedUsersResponseDto> {
+    const skip = (page - 1) * limit;
+    
+    const [data, total] = await this.usersRepository.findAndCount({
+      skip,
+      take: limit,
+    });
+
+    const totalPages = Math.ceil(total / limit);
+
+    if (page > totalPages && total > 0) {
+      throw new NotFoundException(`Страница ${page} не найдена. Всего страниц: ${totalPages}`);
+    }
+
+    return {
+      data,
+      page,
+      totalPages,
+    };
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
