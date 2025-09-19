@@ -33,7 +33,7 @@ export class SkillsController {
   }
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.skillsService.findOne(+id);
+    return this.skillsService.findOne(id);
   }
 
   @Patch(':id')
@@ -48,7 +48,7 @@ export class SkillsController {
   @Delete(':id')
   remove(@Param('id') id: string, @Req() request: AuthenticatedRequest) {
     const userId = request.user.userId;
-    return this.skillsService.remove(+id, userId);
+    return this.skillsService.remove(id, userId);
   }
 
   @Post(':id/favorite')
@@ -58,6 +58,6 @@ export class SkillsController {
     @Req() request: AuthenticatedRequest,
   ) {
     const userId = request.user.userId;
-    return this.skillsService.addToFavorites(+id, userId);
+    return this.skillsService.addToFavorites(id, userId);
   }
 }
