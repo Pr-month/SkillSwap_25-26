@@ -1,4 +1,5 @@
-import { IsEmail, IsString, IsNotEmpty, MinLength } from 'class-validator';
+import { IsEmail, IsString, IsNotEmpty, MinLength, IsDate, IsEnum, IsOptional } from 'class-validator';
+import { Gender } from 'src/users/enums';
 
 export class RegisterDto {
   @IsString({ message: 'Имя должно быть строкой' })
@@ -13,4 +14,25 @@ export class RegisterDto {
   @IsNotEmpty({ message: 'Пароль обязателен' })
   @MinLength(6, { message: 'Пароль должен содержать минимум 6 символов' })
   password: string;
+
+  @IsNotEmpty()
+  @IsString()
+  about: string;
+
+  @IsNotEmpty()
+  @IsDate()
+  birthdate: Date;
+
+  @IsNotEmpty()
+  @IsString()
+  city: string;
+
+  @IsNotEmpty()
+  @IsEnum(Gender)
+  @IsOptional()
+  gender: Gender;
+
+  @IsNotEmpty()
+  @IsString()
+  avatar: string
 }
