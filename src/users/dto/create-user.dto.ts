@@ -1,7 +1,8 @@
 // Временно отключены декораторы валидации из-за проблем с установкой class-validator
 // import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString, IsEnum, IsOptional, IsDate } from 'class-validator';
+import { Gender } from '../enums';
 
 export class CreateUserDto {
   @IsNotEmpty()
@@ -20,16 +21,17 @@ export class CreateUserDto {
   about: string;
 
   @IsNotEmpty()
-  @IsString()
-  birthdate: string;
+  @IsDate()
+  birthdate: Date;
 
   @IsNotEmpty()
   @IsString()
   city: string;
 
   @IsNotEmpty()
-  @IsString()
-  gender: string;
+  @IsEnum(Gender)
+  @IsOptional()
+  gender: Gender;
 
   @IsNotEmpty()
   @IsString()
