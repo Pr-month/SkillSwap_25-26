@@ -28,7 +28,7 @@ export class SkillsService {
     return this.skillRepository.save(skill);
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     return this.skillRepository.findOneOrFail({
       where: { id },
       relations: ['owner'],
@@ -36,8 +36,7 @@ export class SkillsService {
   }
 
   async update(id: string, updateSkillDto: UpdateSkillDto) {
-    const skillId = parseInt(id, 10);
-    const skill = await this.skillRepository.findOneBy({ id: skillId });
+    const skill = await this.skillRepository.findOneBy({ id });
     if (!skill) {
       throw new NotFoundException('Skill not found');
     }
@@ -45,7 +44,7 @@ export class SkillsService {
     return this.skillRepository.save(skill);
   }
 
-  async remove(id: number, userId: string) {
+  async remove(id: string, userId: string) {
     // Получаем навык с информацией о владельце
     const skill = await this.findOne(id);
 
@@ -68,7 +67,7 @@ export class SkillsService {
   }
 
   async addToFavorites(
-    skillId: number,
+    skillId: string,
     userId: string,
   ): Promise<{ message: string }> {
     // Проверяем существование навыка
