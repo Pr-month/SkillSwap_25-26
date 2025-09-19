@@ -13,6 +13,7 @@ import * as path from 'path';
 import { Skill } from './entities/skill.entity';
 import { GetSkillsDto } from './dto/get-skills.dto';
 import { User } from 'src/users/entities/user.entity';
+import { Category } from 'src/categories/entities/categories.entity';
 
 @Injectable()
 export class SkillsService {
@@ -21,10 +22,27 @@ export class SkillsService {
     private skillRepository: Repository<Skill>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Category)
+    private categoryRepository: Repository<Category>,
   ) {}
 
   async create(createSkillDto: CreateSkillDto): Promise<Skill> {
-    const skill = this.skillRepository.create(createSkillDto);
+    // Сначала находим категорию по ID
+    const category = await this.categoryRepository.findOneBy({
+      id: createSkillDto.categoryId,
+    });
+
+    if (!category) {
+      throw new NotFoundException('Категория не найдена');
+    }
+
+    // Создаем новый навык
+    const skill = this.skillRepository.create({
+      ...createSkillDto,
+      category,
+    });
+
+    // Сохраняем навык
     return this.skillRepository.save(skill);
   }
 
@@ -104,7 +122,7 @@ export class SkillsService {
 
     return { message: 'Навык успешно добавлен в избранное' };
   }
-  
+
   /**
    * Удаляет изображения навыка из файловой системы
    */
