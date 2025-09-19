@@ -1,5 +1,5 @@
 import * as bcrypt from 'bcrypt';
-import { AppDataSource } from './data-source';
+import { AppDataSource } from '../config/database.config';
 import { User } from '../users/entities/user.entity';
 import { AdminUserData } from './users.data';
 

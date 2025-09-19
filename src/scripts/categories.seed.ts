@@ -1,4 +1,4 @@
-import { AppDataSource } from './data-source';
+import { AppDataSource } from '../config/database.config';
 import { Category } from '../categories/entities/categories.entity';
 import { CategoriesData } from './categories.data';
 
