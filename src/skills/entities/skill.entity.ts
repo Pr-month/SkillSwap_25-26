@@ -6,6 +6,7 @@ import {
   ManyToMany,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
+import { Category } from 'src/categories/entities/categories.entity';
 
 @Entity({ name: 'skills' })
 export class Skill {
@@ -25,8 +26,8 @@ export class Skill {
   })
   description: string;
 
-  // @ManyToOne(() => Category, category => category.skills)
-  // category: Category;
+  @ManyToOne(() => Category, (category) => category.skills)
+  category: Category;
 
   @Column({
     type: 'simple-array',

@@ -1,3 +1,4 @@
+import { Skill } from 'src/skills/entities/skill.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -21,4 +22,7 @@ export class Category {
 
   @OneToMany(() => Category, (category) => category.parent)
   children: Category[];
+
+  @OneToMany(() => Skill, (skill) => skill.category)
+  skills: Skill[];
 }

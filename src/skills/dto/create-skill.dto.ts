@@ -13,5 +13,5 @@ export class CreateSkillDto {
   images?: string[];
 
   @IsNotEmpty()
-  category: string;
+  categoryId: number;
 }
