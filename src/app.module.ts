@@ -27,14 +27,8 @@ import { RequestsModule } from './requests/requests.module';
       imports: [ConfigModule],
       inject: [databaseConfig.KEY],
       useFactory: (config: IDatabaseConfig) => ({
-        type: 'postgres',
-        host: config.host,
-        port: config.port,
-        username: config.username,
-        password: config.password,
-        database: config.database,
+        ...config,
         autoLoadEntities: true,
-        synchronize: config.synchronize,
       }),
     }),
     JwtModule.registerAsync({
