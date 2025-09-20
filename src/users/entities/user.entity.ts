@@ -4,6 +4,7 @@ import {
   Column,
   ManyToMany,
   JoinTable,
+  OneToMany,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { Gender, UserRole } from '../enums';
@@ -61,8 +62,8 @@ export class User {
   @Column({ type: 'varchar', nullable: true })
   avatar: string;
 
-  // @ManyToMany(() => Skill, skill => skill.owners, { eager: true })
-  // skills: Skill[];
+  @OneToMany(() => Skill, (skill) => skill.owner)
+  skills: Skill[];
 
   @ManyToMany(() => Category, (category) => category.learners, { eager: true })
   wantToLearn: Category[];
