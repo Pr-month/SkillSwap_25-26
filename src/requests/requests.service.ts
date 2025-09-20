@@ -1,8 +1,8 @@
-import { 
-  Injectable, 
-  NotFoundException, 
+import {
+  Injectable,
+  NotFoundException,
   BadRequestException,
-  ForbiddenException 
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -10,6 +10,7 @@ import { Request } from './entities/request.entity';
 import { User } from '../users/entities/user.entity';
 import { Skill } from '../skills/entities/skill.entity';
 import { CreateRequestDto } from './dto/create-request.dto';
+import { RequestStatus } from '../users/enums';
 
 @Injectable()
 export class RequestsService {
@@ -22,12 +23,17 @@ export class RequestsService {
     private skillRepository: Repository<Skill>,
   ) {}
 
-  async create(createRequestDto: CreateRequestDto, senderId: string): Promise<Request> {
+  async create(
+    createRequestDto: CreateRequestDto,
+    senderId: string,
+  ): Promise<Request> {
     const { offeredSkillId, requestedSkillId } = createRequestDto;
 
     // Проверяем, что пользователь не отправляет заявку самому себе
     if (offeredSkillId === requestedSkillId) {
-      throw new BadRequestException('Нельзя отправить заявку на обмен одного и того же навыка');
+      throw new BadRequestException(
+        'Нельзя отправить заявку на обмен одного и того же навыка',
+      );
     }
 
     // Получаем навыки с их владельцами
@@ -57,7 +63,9 @@ export class RequestsService {
 
     // Проверяем, что запрашиваемый навык не принадлежит отправителю
     if (requestedSkill.owner.id === senderId) {
-      throw new BadRequestException('Нельзя отправить заявку на обмен самому себе');
+      throw new BadRequestException(
+        'Нельзя отправить заявку на обмен самому себе',
+      );
     }
 
     // Получаем получателя заявки (владельца запрашиваемого навыка)
@@ -69,7 +77,7 @@ export class RequestsService {
       receiver: { id: receiver.id } as User,
       offeredSkill: offeredSkill,
       requestedSkill: requestedSkill,
-      status: 'pending' as any,
+      status: RequestStatus.PENDING,
       isRead: false,
     });
 
