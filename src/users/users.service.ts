@@ -125,6 +125,12 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
+  async delete(id: string): Promise<void> {
+    const user = await this.findOne(id);
+    if (!user) throw new NotFoundException(`Пользователь с ID ${id} не найден`);
+    await this.usersRepository.delete(id);
+  }
+
   /**
    * Проверяет пароль пользователя (полезно для AuthService)
    */
