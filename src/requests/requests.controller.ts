@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Request, Get } from '@nestjs/common';
 import { RequestsService } from './requests.service';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -15,5 +15,10 @@ export class RequestsController {
     @Request() req: AuthenticatedRequest,
   ) {
     return this.requestsService.create(createRequestDto, req.user.userId);
+  }
+
+  @Get('outgoing')
+  async getOutgoingRequests(@Request() req: AuthenticatedRequest) {
+    return this.requestsService.getOutgoingRequests(req.user.userId);
   }
 }

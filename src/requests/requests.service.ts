@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Request } from './entities/request.entity';
 import { User } from '../users/entities/user.entity';
 import { Skill } from '../skills/entities/skill.entity';
@@ -95,5 +95,18 @@ export class RequestsService {
     }
 
     return result;
+  }
+
+  async getOutgoingRequests(userId: string): Promise<Request[]> {
+    return this.requestRepository.find({
+      where: {
+        sender: { id: userId },
+        status: In([RequestStatus.PENDING, RequestStatus.IN_PROGRESS]),
+      },
+      relations: ['sender', 'receiver', 'offeredSkill', 'requestedSkill'],
+      order: {
+        createdAt: 'DESC',
+      },
+    });
   }
 }
