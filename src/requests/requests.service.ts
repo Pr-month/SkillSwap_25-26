@@ -96,4 +96,17 @@ export class RequestsService {
 
     return result;
   }
+
+  async getIncomingRequests(userId: string): Promise<Request[]> {
+    return this.requestRepository.find({
+      where: {
+        receiver: { id: userId },
+        status: RequestStatus.PENDING,
+      },
+      relations: ['sender', 'receiver', 'offeredSkill', 'requestedSkill'],
+      order: {
+        createdAt: 'DESC',
+      },
+    });
+  }
 }
