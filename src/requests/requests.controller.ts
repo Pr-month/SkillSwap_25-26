@@ -1,7 +1,18 @@
-import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Request,
+  Delete,
+  Param,
+} from '@nestjs/common';
 import { RequestsService } from './requests.service';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../users/enums';
 import { AuthenticatedRequest } from '../auth/interfaces/auth.interface';
 
 @Controller('requests')
@@ -15,5 +26,12 @@ export class RequestsController {
     @Request() req: AuthenticatedRequest,
   ) {
     return this.requestsService.create(createRequestDto, req.user.userId);
+  }
+
+  @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.USER, UserRole.ADMIN)
+  async remove(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
+    return this.requestsService.remove(id, req.user.userId, req.user.role);
   }
 }
