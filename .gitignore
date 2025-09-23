@@ -3,6 +3,7 @@
 /node_modules
 /build
 /report_by_bagz
+/public
 
 # Logs
 logs
