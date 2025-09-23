@@ -31,6 +31,10 @@ export class RequestsController {
     return this.requestsService.create(createRequestDto, req.user.userId);
   }
 
+  @Get('incoming')
+  async getIncomingRequests(@Request() req: AuthenticatedRequest) {
+    return this.requestsService.getIncomingRequests(req.user.userId);
+  }
   @Get('outgoing')
   async getOutgoingRequests(@Request() req: AuthenticatedRequest) {
     return this.requestsService.getOutgoingRequests(req.user.userId);

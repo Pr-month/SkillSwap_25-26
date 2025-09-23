@@ -98,6 +98,13 @@ export class RequestsService {
     return result;
   }
 
+  async getIncomingRequests(userId: string): Promise<Request[]> {
+    return this.requestRepository.find({
+      where: {
+        receiver: { id: userId },
+        status: RequestStatus.PENDING,
+  }
+      
   async getOutgoingRequests(userId: string): Promise<Request[]> {
     return this.requestRepository.find({
       where: {
