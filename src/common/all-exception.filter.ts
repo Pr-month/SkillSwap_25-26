@@ -6,7 +6,7 @@ import {
   HttpStatus,
   PayloadTooLargeException,
 } from '@nestjs/common';
-import { response, Response } from 'express';
+import { Response } from 'express';
 import { EntityNotFoundError } from 'typeorm';
 
 @Catch()
@@ -15,34 +15,31 @@ export class AllExpectionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const res = ctx.getResponse<Response>();
 
-    if (exception instanceof EntityNotFoundError) {
-      return res.status(HttpStatus.NOT_FOUND).json({
-        statusCode: HttpStatus.NOT_FOUND,
-        message: 'Entity not found',
-      });
-    }
-
-    if (exception.code === '23505') {
-      return response.status(HttpStatus.CONFLICT).json({
-        statusCode: HttpStatus.CONFLICT,
-        message: 'Duplicate entry',
-      });
-    }
-
-    if (exception instanceof PayloadTooLargeException) {
-      return res.status(HttpStatus.PAYLOAD_TOO_LARGE).json({
-        statusCode: HttpStatus.PAYLOAD_TOO_LARGE,
-        message: 'Payload too large',
-      });
-    }
+    let status = HttpStatus.INTERNAL_SERVER_ERROR;
+    let message = 'Internal server error';
 
     if (exception instanceof HttpException) {
-      return res.status(exception.getStatus()).json(exception.getResponse());
+      status = exception.getStatus();
+      message = exception.message;
+    }
+    else if (exception instanceof EntityNotFoundError) {
+      status = HttpStatus.NOT_FOUND
+      message = 'Entity not found'
     }
 
-    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-      statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-      message: 'Internal server error',
+    else if (exception.code === '23505') {
+      status = HttpStatus.CONFLICT
+      message = 'Duplicate entry'
+    }
+
+    else if (exception instanceof PayloadTooLargeException) {
+      status = HttpStatus.PAYLOAD_TOO_LARGE
+      message = 'Payload too large'
+    }
+
+    return res.status(status).json({
+      statusCode: status,
+      message,
     });
   }
 }
