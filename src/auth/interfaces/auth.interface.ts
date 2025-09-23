@@ -30,7 +30,7 @@ export interface AuthenticatedUser {
 }
 
 export interface AuthenticatedRequest extends Request {
-  user: AuthenticatedUser;
+  user: AuthenticatedUser | RefreshTokenUser;
 }
 
 export interface RefreshTokenPayload {
