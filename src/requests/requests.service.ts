@@ -98,6 +98,39 @@ export class RequestsService {
     return result;
   }
 
+  async remove(
+    id: string,
+    userId: string,
+    userRole: string,
+  ): Promise<{ message: string }> {
+    // Получаем заявку с информацией об отправителе
+    const request = await this.requestRepository.findOne({
+      where: { id },
+      relations: ['sender'],
+    });
+
+    // Проверяем существование заявки
+    if (!request) {
+      throw new NotFoundException(`Заявка с ID ${id} не найдена`);
+    }
+
+    // Проверяем права доступа:
+    // - Админ может удалять все заявки
+    // - Пользователь может удалять только свои заявки
+    if (userRole !== 'admin' && request.sender.id !== userId) {
+      throw new ForbiddenException('У вас нет прав на удаление этой заявки');
+    }
+
+    // Удаляем заявку из базы данных
+    const result = await this.requestRepository.delete(id);
+
+    if (result.affected === 0) {
+      throw new NotFoundException(`Заявка с ID ${id} не найдена`);
+    }
+
+    return { message: 'Заявка успешно удалена' };
+  }
+
   async update(
     id: string,
     updateRequestDto: UpdateRequestDto,
