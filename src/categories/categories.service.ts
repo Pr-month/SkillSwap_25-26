@@ -15,6 +15,13 @@ export class CategoriesService {
     private readonly categoriesRepository: Repository<Category>,
   ) {}
 
+  async findAll(): Promise<Category[]> {
+    return this.categoriesRepository.find({
+      relations: ['parent', 'children'],
+      order: { name: 'ASC' },
+    });
+  }
+
   async update(id: string, dto: UpdateCategoryDto): Promise<Category> {
     const category = await this.categoriesRepository.findOne({
       where: { id },
