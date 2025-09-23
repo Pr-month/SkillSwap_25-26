@@ -103,8 +103,14 @@ export class RequestsService {
       where: {
         receiver: { id: userId },
         status: RequestStatus.PENDING,
+      },
+      relations: ['sender', 'receiver', 'offeredSkill', 'requestedSkill'],
+      order: {
+        createdAt: 'DESC',
+      },
+    });
   }
-      
+
   async getOutgoingRequests(userId: string): Promise<Request[]> {
     return this.requestRepository.find({
       where: {
@@ -117,7 +123,7 @@ export class RequestsService {
       },
     });
   }
-  
+
   async remove(
     id: string,
     userId: string,

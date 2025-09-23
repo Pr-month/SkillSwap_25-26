@@ -1,13 +1,18 @@
-import { Controller, Delete, Param, ParseUUIDPipe } from '@nestjs/common';
-import { CategoriesService } from './categories.service';
-import { UseGuards } from '@nestjs/common/decorators/core/use-guards.decorator';
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { UserRole } from '../users/enums';
-import { CategoriesService } from './categories.service';
+import {
+  Body,
+  Controller,
+  Delete,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { UserRole } from 'src/users/enums';
+import { CategoriesService } from './categories.service';
 
 @Controller('categories')
 export class CategoriesController {
@@ -21,7 +26,7 @@ export class CategoriesController {
   ): Promise<{ message: string }> {
     return this.categoriesService.removeByID(id);
   }
-  
+
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)

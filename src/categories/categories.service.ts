@@ -1,31 +1,28 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Category } from 'src/categories/entities/categories.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Category } from './entities/categories.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Category } from './entities/categories.entity';
 
 @Injectable()
 export class CategoriesService {
   constructor(
     @InjectRepository(Category)
-    private categoryRepository: Repository<Category>,
+    private categoryRepositoryy: Repository<Category>,
   ) {}
 
   async removeByID(id: string): Promise<{ message: string }> {
-    const category = await this.categoryRepository.findOne({ where: { id } });
+    const category = await this.categoryRepositoryy.findOne({ where: { id } });
 
     if (!category) {
       throw new NotFoundException(`Категория с ID ${id} не найдена`);
     }
 
-    await this.categoryRepository.delete(id);
+    await this.categoryRepositoryy.delete(id);
 
     return { message: `Категория с ID ${id} успешно удалена` };
   }
-  
+
   async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
     const { name, parentId } = createCategoryDto;
 
@@ -34,7 +31,7 @@ export class CategoriesService {
 
     // Если указан parentId, находим родительскую категорию
     if (parentId) {
-      const parent = await this.categoriesRepository.findOne({
+      const parent = await this.categoryRepositoryy.findOne({
         where: { id: parentId },
       });
 
@@ -45,7 +42,7 @@ export class CategoriesService {
       categoryData.parent = parent;
     }
 
-    const category = this.categoriesRepository.create(categoryData);
-    return await this.categoriesRepository.save(category);
+    const category = this.categoryRepositoryy.create(categoryData);
+    return await this.categoryRepositoryy.save(category);
   }
 }

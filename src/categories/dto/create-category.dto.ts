@@ -14,5 +14,5 @@ export class CreateCategoryDto {
 
   // @IsOptional()
   // @IsNumber()
-  parentId?: number;
+  parentId?: string;
 }

@@ -19,7 +19,9 @@ export class RefreshTokenGuard extends AuthGuard('refresh-token') {
     }
 
     if (!authHeader.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Authorization header must be Bearer token');
+      throw new UnauthorizedException(
+        'Authorization header must be Bearer token',
+      );
     }
 
     const token = authHeader.slice(7).trim();

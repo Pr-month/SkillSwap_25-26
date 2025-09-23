@@ -45,7 +45,7 @@ export class RequestsController {
   async remove(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     return this.requestsService.remove(id, req.user.userId, req.user.role);
   }
-  
+
   @Patch(':id')
   async update(
     @Param('id') id: string,

@@ -38,9 +38,10 @@ export class RefreshTokenStrategy extends PassportStrategy(
     payload: RefreshTokenPayload,
   ): Promise<RefreshTokenUser> {
     const authHeader = req.headers?.authorization;
-    const token = typeof authHeader === 'string' && authHeader.startsWith('Bearer ')
-      ? authHeader.slice(7).trim()
-      : '';
+    const token =
+      typeof authHeader === 'string' && authHeader.startsWith('Bearer ')
+        ? authHeader.slice(7).trim()
+        : '';
 
     const refreshToken = token || null;
     if (!refreshToken) {
