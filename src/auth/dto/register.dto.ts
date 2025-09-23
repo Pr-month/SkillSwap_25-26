@@ -1,4 +1,12 @@
-import { IsEmail, IsString, IsNotEmpty, MinLength, IsDate, IsEnum, IsOptional } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  IsNotEmpty,
+  MinLength,
+  IsDate,
+  IsEnum,
+  IsOptional,
+} from 'class-validator';
 import { Gender } from 'src/users/enums';
 
 export class RegisterDto {
@@ -34,5 +42,5 @@ export class RegisterDto {
 
   @IsNotEmpty()
   @IsString()
-  avatar: string
+  avatar: string;
 }
