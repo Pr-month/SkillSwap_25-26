@@ -32,7 +32,7 @@ export class UsersController {
 
   @Get()
   async findAll(
-    @Query() paginationDto: PaginationDto
+    @Query() paginationDto: PaginationDto,
   ): Promise<PaginatedUsersResponseDto> {
     const { page = 1, limit = 20 } = paginationDto;
     return this.usersService.findAllPaginated(page, limit);

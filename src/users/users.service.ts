@@ -28,7 +28,7 @@ export class UsersService {
     limit: number = 20,
   ): Promise<PaginatedUsersResponseDto> {
     const skip = (page - 1) * limit;
-    
+
     const [data, total] = await this.usersRepository.findAndCount({
       skip,
       take: limit,
@@ -37,7 +37,9 @@ export class UsersService {
     const totalPages = Math.ceil(total / limit);
 
     if (page > totalPages && total > 0) {
-      throw new NotFoundException(`Страница ${page} не найдена. Всего страниц: ${totalPages}`);
+      throw new NotFoundException(
+        `Страница ${page} не найдена. Всего страниц: ${totalPages}`,
+      );
     }
 
     return {

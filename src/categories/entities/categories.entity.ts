@@ -1,3 +1,4 @@
+import { Skill } from '../../skills/entities/skill.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -8,8 +9,8 @@ import {
 
 @Entity('categories')
 export class Category {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ type: 'varchar', length: 100 })
   name: string;
@@ -21,4 +22,7 @@ export class Category {
 
   @OneToMany(() => Category, (category) => category.parent)
   children: Category[];
+
+  @OneToMany(() => Skill, (skill) => skill.category)
+  skills: Skill[];
 }

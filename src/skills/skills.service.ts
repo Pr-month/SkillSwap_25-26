@@ -13,6 +13,7 @@ import * as path from 'path';
 import { Skill } from './entities/skill.entity';
 import { GetSkillsDto } from './dto/get-skills.dto';
 import { User } from 'src/users/entities/user.entity';
+import { Category } from 'src/categories/entities/categories.entity';
 
 @Injectable()
 export class SkillsService {
@@ -21,14 +22,31 @@ export class SkillsService {
     private skillRepository: Repository<Skill>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Category)
+    private categoryRepository: Repository<Category>,
   ) {}
 
   async create(createSkillDto: CreateSkillDto): Promise<Skill> {
-    const skill = this.skillRepository.create(createSkillDto);
+    // Сначала находим категорию по ID
+    const category = await this.categoryRepository.findOneBy({
+      id: createSkillDto.categoryId,
+    });
+
+    if (!category) {
+      throw new NotFoundException('Категория не найдена');
+    }
+
+    // Создаем новый навык
+    const skill = this.skillRepository.create({
+      ...createSkillDto,
+      category,
+    });
+
+    // Сохраняем навык
     return this.skillRepository.save(skill);
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     return this.skillRepository.findOneOrFail({
       where: { id },
       relations: ['owner'],
@@ -36,8 +54,7 @@ export class SkillsService {
   }
 
   async update(id: string, updateSkillDto: UpdateSkillDto) {
-    const skillId = parseInt(id, 10);
-    const skill = await this.skillRepository.findOneBy({ id: skillId });
+    const skill = await this.skillRepository.findOneBy({ id });
     if (!skill) {
       throw new NotFoundException('Skill not found');
     }
@@ -45,7 +62,7 @@ export class SkillsService {
     return this.skillRepository.save(skill);
   }
 
-  async remove(id: number, userId: string) {
+  async remove(id: string, userId: string) {
     // Получаем навык с информацией о владельце
     const skill = await this.findOne(id);
 
@@ -68,7 +85,7 @@ export class SkillsService {
   }
 
   async addToFavorites(
-    skillId: number,
+    skillId: string,
     userId: string,
   ): Promise<{ message: string }> {
     // Проверяем существование навыка
@@ -104,7 +121,7 @@ export class SkillsService {
 
     return { message: 'Навык успешно добавлен в избранное' };
   }
-  
+
   /**
    * Удаляет изображения навыка из файловой системы
    */
