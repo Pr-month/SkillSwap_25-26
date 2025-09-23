@@ -1,7 +1,7 @@
 import * as bcrypt from 'bcrypt';
 import { AppDataSource } from '../config/database.config';
 import { User } from '../users/entities/user.entity';
-import { AdminUserData } from './users.data';
+import { AdminUserData, RegularUserData } from './users.data';
 
 async function seed() {
   try {
@@ -42,6 +42,27 @@ async function seed() {
     const savedAdmin = await userRepo.save(adminUser);
     console.log(
       `✅ Создан администратор: ${savedAdmin.name} (${savedAdmin.email})`,
+    );
+
+    console.log('👤 Создание обычного пользователя...');
+
+    const hashedPasswordUser = await bcrypt.hash(
+      RegularUserData.password,
+      saltRounds,
+    );
+
+    const regularUser = new User();
+    regularUser.name = RegularUserData.name;
+    regularUser.email = RegularUserData.email;
+    regularUser.password = hashedPasswordUser;
+    regularUser.about = RegularUserData.about;
+    regularUser.city = RegularUserData.city;
+    regularUser.gender = RegularUserData.gender;
+    regularUser.role = RegularUserData.role;
+
+    const savedUser = await userRepo.save(regularUser);
+    console.log(
+      `✅ Создан пользователь: ${savedUser.name} (${savedUser.email})`,
     );
 
     console.log('🎉 Сидинг пользователей успешно завершен!');
