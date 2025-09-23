@@ -4,6 +4,7 @@ import {
   Body,
   UseGuards,
   Request,
+  Get,
   Delete,
   Patch,
   Param,
@@ -30,6 +31,10 @@ export class RequestsController {
     return this.requestsService.create(createRequestDto, req.user.userId);
   }
 
+  @Get('outgoing')
+  async getOutgoingRequests(@Request() req: AuthenticatedRequest) {
+    return this.requestsService.getOutgoingRequests(req.user.userId);
+  }
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles(UserRole.USER, UserRole.ADMIN)
