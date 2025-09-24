@@ -162,11 +162,11 @@ export class RequestsService {
     updateRequestDto: UpdateRequestDto,
     userId: string,
     userRole: string,
-  ): Promise<Request> {
-    // Находим заявку с полной информацией
+  ): Promise<{ message: string }> {
+    // Находим заявку БЕЗ relations (только для проверки прав)
     const request = await this.requestRepository.findOne({
       where: { id },
-      relations: ['sender', 'receiver', 'offeredSkill', 'requestedSkill'],
+      relations: ['sender', 'receiver'], // только для проверки прав
     });
 
     if (!request) {
@@ -182,28 +182,16 @@ export class RequestsService {
       throw new ForbiddenException('У вас нет прав для обновления этой заявки');
     }
 
-    // Обновляем поля
-    if (updateRequestDto.isRead !== undefined) {
-      request.isRead = updateRequestDto.isRead;
-    }
-
-    if (updateRequestDto.status !== undefined) {
-      request.status = updateRequestDto.status;
-    }
-
-    // Сохраняем изменения
-    const updatedRequest = await this.requestRepository.save(request);
-
-    // Возвращаем обновленную заявку с полной информацией
-    const result = await this.requestRepository.findOne({
-      where: { id: updatedRequest.id },
-      relations: ['sender', 'receiver', 'offeredSkill', 'requestedSkill'],
+    // Обновляем только нужные поля через update (более эффективно)
+    await this.requestRepository.update(id, {
+      ...(updateRequestDto.isRead !== undefined && {
+        isRead: updateRequestDto.isRead,
+      }),
+      ...(updateRequestDto.status !== undefined && {
+        status: updateRequestDto.status,
+      }),
     });
 
-    if (!result) {
-      throw new NotFoundException('Ошибка при обновлении заявки');
-    }
-
-    return result;
+    return { message: 'Заявка успешно обновлена' };
   }
 }

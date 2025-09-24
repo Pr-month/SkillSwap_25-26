@@ -5,7 +5,7 @@ import {
   MinLength,
   IsEnum,
   IsOptional,
-  IsDateString
+  IsDateString,
 } from 'class-validator';
 import { Gender } from 'src/users/enums';
 
