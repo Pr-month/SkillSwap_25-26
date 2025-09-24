@@ -50,7 +50,6 @@ import { RequestsModule } from './requests/requests.module';
     CategoriesModule,
     FilesModule,
     RequestsModule,
-    CategoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
