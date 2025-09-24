@@ -14,4 +14,7 @@ export class CreateSkillDto {
 
   @IsNotEmpty()
   categoryId: string;
+
+  @IsNotEmpty() 
+  ownerId: string; 
 }

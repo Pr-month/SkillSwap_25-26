@@ -24,7 +24,8 @@ export class SkillsController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  async create(@Body() createSkillDto: CreateSkillDto) {
+  async create(@Body() createSkillDto: CreateSkillDto, @Request() req: AuthenticatedRequest) {
+    createSkillDto.ownerId = req.user.userId;
     return this.skillsService.create(createSkillDto);
   }
 

@@ -35,11 +35,19 @@ export class SkillsService {
     if (!category) {
       throw new NotFoundException('Категория не найдена');
     }
+    const owner = await this.userRepository.findOneBy({
+      id: createSkillDto.ownerId,
+    });
+  
+    if (!owner) {
+      throw new NotFoundException('Пользователь не найден');
+    }
 
     // Создаем новый навык
     const skill = this.skillRepository.create({
       ...createSkillDto,
       category,
+      owner
     });
 
     // Сохраняем навык
