@@ -22,20 +22,14 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto): Promise<TokensDto> {
-    const existingUser = await this.usersService.findByEmail(registerDto.email);
-
-    if (existingUser) {
-      throw new UnauthorizedException(
-        'Пользователь с таким email уже существует',
-      );
-    }
-
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
     const user = await this.usersService.create({
       ...registerDto,
       password: hashedPassword,
+      birthdate: new Date(registerDto.birthdate),
+      gender: registerDto.gender,
     });
-
+  
     return this.generateTokens(user.id);
   }
 

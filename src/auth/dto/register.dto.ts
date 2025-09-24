@@ -37,7 +37,7 @@ export class RegisterDto {
 
   @IsOptional()
   @IsEnum(Gender)
-  gender?: Gender;
+  gender: Gender;
 
   @IsNotEmpty()
   @IsString()
