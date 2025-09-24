@@ -122,6 +122,14 @@ export class SkillsService {
     return { message: 'Навык успешно добавлен в избранное' };
   }
 
+  async removeFromFavorites(skillId: string, userId: string): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['favoriteSkills'] });
+    if (!user) throw new NotFoundException('User not found');
+
+    user.favoriteSkills = user.favoriteSkills.filter(skill => skill.id !== skillId);
+    await this.userRepository.save(user);
+}
+
   /**
    * Удаляет изображения навыка из файловой системы
    */
