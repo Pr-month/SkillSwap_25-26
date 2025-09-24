@@ -12,19 +12,20 @@ export class RefreshTokenGuard extends AuthGuard('refresh-token') {
   canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest<Request>();
 
-    // Проверяем наличие refresh token в body
-    const refreshToken = request.body?.refreshToken;
-    if (!refreshToken && refreshToken !== '') {
-      throw new UnauthorizedException('Refresh token is required');
+    // Проверяем наличие refresh token в заголовке Authorization: Bearer <token>
+    const authHeader = request.headers?.authorization;
+    if (!authHeader || typeof authHeader !== 'string') {
+      throw new UnauthorizedException('Authorization header is required');
     }
 
-    // Проверяем, что это строка
-    if (typeof refreshToken !== 'string') {
-      throw new UnauthorizedException('Refresh token must be a string');
+    if (!authHeader.startsWith('Bearer ')) {
+      throw new UnauthorizedException(
+        'Authorization header must be Bearer token',
+      );
     }
 
-    // Проверяем, что токен не пустой
-    if (refreshToken.trim().length === 0) {
+    const token = authHeader.slice(7).trim();
+    if (token.length === 0) {
       throw new UnauthorizedException('Refresh token cannot be empty');
     }
 

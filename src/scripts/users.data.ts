@@ -9,3 +9,13 @@ export const AdminUserData = {
   gender: Gender.MALE,
   role: UserRole.ADMIN,
 };
+
+export const RegularUserData = {
+  name: 'Иван Иванов',
+  email: 'user@example.com',
+  password: 'user123',
+  about: 'Обычный тестовый пользователь',
+  city: 'Санкт-Петербург',
+  gender: Gender.MALE,
+  role: UserRole.USER,
+};
