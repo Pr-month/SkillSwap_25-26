@@ -7,6 +7,6 @@ export class UpdateCategoryDto {
   name?: string;
 
   @IsOptional()
-  @IsUUID()
-  parentId?: string;
+  @IsUUID('4')
+  parentId?: string | null;
 }

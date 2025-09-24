@@ -4,9 +4,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { Category } from './entities/categories.entity';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { CreateCategoryDto } from './dto/create-category.dto';
 
 @Injectable()
 export class CategoriesService {
@@ -17,7 +18,8 @@ export class CategoriesService {
 
   async findAll(): Promise<Category[]> {
     return this.categoriesRepository.find({
-      relations: ['parent', 'children'],
+      where: { parent: IsNull() },
+      relations: ['children'],
       order: { name: 'ASC' },
     });
   }
@@ -42,8 +44,7 @@ export class CategoriesService {
         );
       }
       if (dto.parentId === (null as any)) {
-        // Сбросить родителя
-        // Приведение типов для явного допуска null без валидации
+        // сброс родителя
         category.parent = null as any;
       } else {
         const parent = await this.categoriesRepository.findOne({
@@ -58,18 +59,16 @@ export class CategoriesService {
 
     await this.categoriesRepository.save(category);
     return category;
-    
-    private categoryRepositoryy: Repository<Category>,
-  ) {}
+  }
 
   async removeByID(id: string): Promise<{ message: string }> {
-    const category = await this.categoryRepositoryy.findOne({ where: { id } });
+    const category = await this.categoriesRepository.findOne({ where: { id } });
 
     if (!category) {
       throw new NotFoundException(`Категория с ID ${id} не найдена`);
     }
 
-    await this.categoryRepositoryy.delete(id);
+    await this.categoriesRepository.delete(id);
 
     return { message: `Категория с ID ${id} успешно удалена` };
   }
@@ -77,12 +76,10 @@ export class CategoriesService {
   async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
     const { name, parentId } = createCategoryDto;
 
-    // Создаём объект категории
     const categoryData: Partial<Category> = { name };
 
-    // Если указан parentId, находим родительскую категорию
     if (parentId) {
-      const parent = await this.categoryRepositoryy.findOne({
+      const parent = await this.categoriesRepository.findOne({
         where: { id: parentId },
       });
 
@@ -93,7 +90,7 @@ export class CategoriesService {
       categoryData.parent = parent;
     }
 
-    const category = this.categoryRepositoryy.create(categoryData);
-    return await this.categoryRepositoryy.save(category);
+    const category = this.categoriesRepository.create(categoryData);
+    return await this.categoriesRepository.save(category);
   }
 }

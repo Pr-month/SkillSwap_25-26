@@ -3,7 +3,6 @@ import {
   IsString,
   IsNotEmpty,
   MinLength,
-  IsDate,
   IsEnum,
   IsOptional,
   IsDateString
@@ -30,16 +29,15 @@ export class RegisterDto {
 
   @IsNotEmpty()
   @IsDateString()
-  birthdate: Date;
+  birthdate: string;
 
   @IsNotEmpty()
   @IsString()
   city: string;
 
-  @IsNotEmpty()
-  @IsEnum(Gender)
   @IsOptional()
-  gender: Gender;
+  @IsEnum(Gender)
+  gender?: Gender;
 
   @IsNotEmpty()
   @IsString()
