@@ -10,7 +10,6 @@ import { Exclude } from 'class-transformer';
 import { Gender, UserRole } from '../enums';
 import { Skill } from '../../skills/entities/skill.entity';
 import { Category } from 'src/categories/entities/categories.entity';
-// import { Category } from './category.entity';
 
 @Entity('users')
 export class User {
@@ -65,7 +64,7 @@ export class User {
   @OneToMany(() => Skill, (skill) => skill.owner)
   skills: Skill[];
 
-  @ManyToMany(() => Category, (category) => category.learners, { eager: true })
+  @ManyToMany(() => Category, { eager: true })
   wantToLearn: Category[];
 
   @ManyToMany(() => Skill, (skill) => skill.favoritedBy)

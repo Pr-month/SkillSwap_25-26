@@ -5,7 +5,6 @@ import {
   Column,
   ManyToOne,
   OneToMany,
-  ManyToMany,
 } from 'typeorm';
 
 @Entity('categories')
@@ -26,7 +25,4 @@ export class Category {
 
   @OneToMany(() => Skill, (skill) => skill.category)
   skills: Skill[];
-
-  @ManyToMany(() => User, (user) => user.wantToLearn, { eager: true })
-  learners: User[];
 }
