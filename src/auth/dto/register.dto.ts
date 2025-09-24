@@ -6,6 +6,7 @@ import {
   IsDate,
   IsEnum,
   IsOptional,
+  IsDateString
 } from 'class-validator';
 import { Gender } from 'src/users/enums';
 
@@ -28,7 +29,7 @@ export class RegisterDto {
   about: string;
 
   @IsNotEmpty()
-  @IsDate()
+  @IsDateString()
   birthdate: Date;
 
   @IsNotEmpty()

@@ -84,6 +84,28 @@ export class AuthService {
     return this.generateTokens(tokenEntity.user.id);
   }
 
+  async refreshTokensByToken(refreshToken: string): Promise<TokensDto> {
+    const tokenEntity = await this.refreshTokenRepository.findOne({
+      where: { token: refreshToken, isActive: true },
+      relations: ['user'],
+    });
+
+    if (!tokenEntity) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    if (new Date() > tokenEntity.expiresAt) {
+      tokenEntity.isActive = false;
+      await this.refreshTokenRepository.save(tokenEntity);
+      throw new UnauthorizedException('Refresh token expired');
+    }
+
+    tokenEntity.isActive = false;
+    await this.refreshTokenRepository.save(tokenEntity);
+
+    return this.generateTokens(tokenEntity.user.id);
+  }
+
   private async generateTokens(userId: string): Promise<TokensDto> {
     const user = await this.usersService.findOne(userId);
 
@@ -99,7 +121,7 @@ export class AuthService {
     const accessToken = this.jwtService.sign(
       { sub: user.id, email: user.email, role: user.role },
       {
-        secret: this.configService.get<string>('JWT_SECRET'),
+        secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
         expiresIn: accessTokenExpiresIn,
       },
     );

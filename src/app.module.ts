@@ -7,6 +7,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { SkillsModule } from './skills/skills.module';
+import { CategoriesModule } from './categories/categories.module';
 import { WinstonModule } from 'nest-winston';
 import {
   requestLoggerMiddleware,
@@ -47,6 +48,7 @@ import { CategoriesModule } from './categories/categories.module';
     UsersModule,
     AuthModule,
     SkillsModule,
+    CategoriesModule,
     FilesModule,
     RequestsModule,
     CategoriesModule,
