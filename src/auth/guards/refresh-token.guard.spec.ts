@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { RefreshTokenGuard } from './refresh-token.guard';
 import { RefreshTokenUser, AuthGuardError } from '../interfaces/auth.interface';
 
@@ -86,7 +85,7 @@ describe('RefreshTokenGuard', () => {
       });
 
       // Мокаем super.canActivate чтобы избежать реального вызова стратегии
-      const originalCanActivate = guard.canActivate;
+      const originalCanActivate = guard.canActivate.bind(guard);
       guard.canActivate = jest.fn().mockImplementation((ctx) => {
         // Проверяем, что наша логика валидации заголовка прошла успешно
         const request = ctx.switchToHttp().getRequest();
