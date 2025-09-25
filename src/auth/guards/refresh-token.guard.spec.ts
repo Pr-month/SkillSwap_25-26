@@ -81,8 +81,10 @@ describe('RefreshTokenGuard', () => {
     });
 
     it('should not throw when valid Bearer token is provided', () => {
-      const context = mockExecutionContext({ authorization: 'Bearer valid-token' });
-      
+      const context = mockExecutionContext({
+        authorization: 'Bearer valid-token',
+      });
+
       // Мокаем super.canActivate чтобы избежать реального вызова стратегии
       const originalCanActivate = guard.canActivate;
       guard.canActivate = jest.fn().mockImplementation((ctx) => {
@@ -93,7 +95,9 @@ describe('RefreshTokenGuard', () => {
           throw new UnauthorizedException('Authorization header is required');
         }
         if (!authHeader.startsWith('Bearer ')) {
-          throw new UnauthorizedException('Authorization header must be Bearer token');
+          throw new UnauthorizedException(
+            'Authorization header must be Bearer token',
+          );
         }
         const token = authHeader.slice(7).trim();
         if (token.length === 0) {
@@ -103,7 +107,7 @@ describe('RefreshTokenGuard', () => {
       });
 
       expect(() => guard.canActivate(context)).not.toThrow();
-      
+
       // Восстанавливаем оригинальный метод
       guard.canActivate = originalCanActivate;
     });
