@@ -6,6 +6,7 @@ import { Gender, UserRole } from '../../users/enums';
 import { Request } from 'express';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { RefreshToken } from '../entities/refresh-token.entity';
+import { User } from '../../users/entities/user.entity';
 
 describe('RefreshTokenStrategy', () => {
   let strategy: RefreshTokenStrategy;
@@ -59,8 +60,8 @@ describe('RefreshTokenStrategy', () => {
       gender: Gender.MALE,
       avatar: null,
       role: UserRole.USER,
-      createdAt: new Date(),
-    };
+      favoriteSkills: [],
+    } as unknown as User;
 
     const mockTokenEntity = {
       id: 1,
@@ -86,8 +87,8 @@ describe('RefreshTokenStrategy', () => {
     };
 
     const req = {
-      body: {
-        refreshToken: 'test-refresh-token',
+      headers: {
+        authorization: 'Bearer test-refresh-token',
       },
     } as Request;
     const result = await strategy.validate(req, payload);
@@ -112,8 +113,8 @@ describe('RefreshTokenStrategy', () => {
     };
 
     const req = {
-      body: {
-        refreshToken: 'test-refresh-token',
+      headers: {
+        authorization: 'Bearer test-refresh-token',
       },
     } as Request;
 
@@ -154,8 +155,8 @@ describe('RefreshTokenStrategy', () => {
     jest.spyOn(refreshTokenRepository, 'findOne').mockResolvedValue(null);
 
     const req = {
-      body: {
-        refreshToken: 'invalid-token',
+      headers: {
+        authorization: 'Bearer invalid-token',
       },
     } as Request;
 
@@ -191,8 +192,8 @@ describe('RefreshTokenStrategy', () => {
     };
 
     const req = {
-      body: {
-        refreshToken: 'expired-token',
+      headers: {
+        authorization: 'Bearer expired-token',
       },
     } as Request;
 
