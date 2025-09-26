@@ -19,7 +19,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   async register(registerDto: RegisterDto): Promise<TokensDto> {
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
@@ -73,7 +73,7 @@ export class AuthService {
       where: { token: refreshToken, isActive: true },
       relations: ['user'],
     });
-    
+
     if (!tokenEntity) {
       throw new UnauthorizedException('Invalid refresh token');
     }
@@ -97,7 +97,7 @@ export class AuthService {
     const accessToken = this.jwtService.sign(
       { sub: user.id, email: user.email, role: user.role },
       {
-        secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
+        secret: this.configService.get<string>('JWT_ACCESS_SECRET') || 'test',
         expiresIn: accessTokenExpiresIn,
       },
     );
@@ -126,7 +126,7 @@ export class AuthService {
       isActive: true,
     });
 
-    return { accessToken, refreshToken }; 
+    return { accessToken, refreshToken };
   }
 
   async logoutUser(userId: string) {
