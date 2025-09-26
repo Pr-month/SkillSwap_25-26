@@ -22,37 +22,23 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto): Promise<TokensDto> {
-    const existingUser = await this.usersService.findByEmail(registerDto.email);
-
-    if (existingUser) {
-      throw new UnauthorizedException(
-        'Пользователь с таким email уже существует',
-      );
-    }
-
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
     const user = await this.usersService.create({
       ...registerDto,
       password: hashedPassword,
+      birthdate: new Date(registerDto.birthdate),
+      gender: registerDto.gender,
     });
-
     return this.generateTokens(user.id);
   }
 
   async login(loginDto: LoginDto): Promise<TokensDto> {
-    // Используем метод с паролем для аутентификации
-    const user = await this.usersService.findByEmailWithPassword(
-      loginDto.email,
-    );
-
+    const user = await this.usersService.findByEmailWithPassword(loginDto.email);
     if (!user) {
       throw new UnauthorizedException('Неверные учетные данные');
     }
 
-    const isPasswordValid = await bcrypt.compare(
-      loginDto.password,
-      user.password,
-    );
+    const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Неверные учетные данные');
     }
@@ -62,7 +48,6 @@ export class AuthService {
 
   async refreshTokens(refreshTokenDto: RefreshTokenDto): Promise<TokensDto> {
     const { refreshToken } = refreshTokenDto;
-
     const tokenEntity = await this.refreshTokenRepository.findOne({
       where: { token: refreshToken, isActive: true },
       relations: ['user'],
@@ -80,7 +65,6 @@ export class AuthService {
 
     tokenEntity.isActive = false;
     await this.refreshTokenRepository.save(tokenEntity);
-
     return this.generateTokens(tokenEntity.user.id);
   }
 
@@ -89,7 +73,7 @@ export class AuthService {
       where: { token: refreshToken, isActive: true },
       relations: ['user'],
     });
-
+    
     if (!tokenEntity) {
       throw new UnauthorizedException('Invalid refresh token');
     }
@@ -102,21 +86,13 @@ export class AuthService {
 
     tokenEntity.isActive = false;
     await this.refreshTokenRepository.save(tokenEntity);
-
     return this.generateTokens(tokenEntity.user.id);
   }
 
   private async generateTokens(userId: string): Promise<TokensDto> {
     const user = await this.usersService.findOne(userId);
-
-    const accessTokenExpiresIn = this.configService.get<string>(
-      'JWT_ACCESS_EXPIRES_IN',
-      '1h',
-    );
-    const refreshTokenExpiresIn = this.configService.get<string>(
-      'JWT_REFRESH_EXPIRES_IN',
-      '7d',
-    );
+    const accessTokenExpiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '1h');
+    const refreshTokenExpiresIn = this.configService.get<string>('JWT_REFRESH_EXPIRES_IN', '7d');
 
     const accessToken = this.jwtService.sign(
       { sub: user.id, email: user.email, role: user.role },
@@ -134,10 +110,7 @@ export class AuthService {
         tokenType: 'refresh',
       },
       {
-        secret: this.configService.get<string>(
-          'JWT_REFRESH_SECRET',
-          'default-refresh-secret',
-        ),
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET', 'default-refresh-secret'),
         expiresIn: refreshTokenExpiresIn,
       },
     );
@@ -153,19 +126,18 @@ export class AuthService {
       isActive: true,
     });
 
-    return { accessToken, refreshToken };
+    return { accessToken, refreshToken }; 
   }
 
   async logoutUser(userId: string) {
-    // Деактивируем все refresh токены пользователя
     await this.refreshTokenRepository.update(
       { userId, isActive: true },
       { isActive: false },
     );
-
     return {
       success: true,
       message: 'Выход выполнен успешно',
     };
   }
 }
+

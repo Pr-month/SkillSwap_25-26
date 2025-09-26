@@ -16,6 +16,7 @@ import { CreateSkillDto } from './dto/create-skill.dto';
 import { GetSkillsDto } from './dto/get-skills.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
 import { SkillsService } from './skills.service';
+import { Request } from '@nestjs/common';
 
 @Controller('skills')
 export class SkillsController {
@@ -23,7 +24,8 @@ export class SkillsController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  async create(@Body() createSkillDto: CreateSkillDto) {
+  async create(@Body() createSkillDto: CreateSkillDto, @Request() req: AuthenticatedRequest) {
+    createSkillDto.ownerId = req.user.userId;
     return this.skillsService.create(createSkillDto);
   }
 
@@ -42,6 +44,12 @@ export class SkillsController {
     @Body() updateSkillDto: UpdateSkillDto,
   ) {
     return this.skillsService.update(id, updateSkillDto);
+  }
+
+  @Delete(':id/favorite')
+  @UseGuards(JwtAuthGuard)
+  async removeFromFavorites(@Param('id') id: string, @Request() req) {
+      return this.skillsService.removeFromFavorites(id, req.user.id);
   }
 
   @UseGuards(JwtAuthGuard)
