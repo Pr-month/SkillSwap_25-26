@@ -29,7 +29,7 @@ export class RegisterDto {
 
   @IsNotEmpty()
   @IsDateString()
-  birthdate: string;
+  birthdate: Date;
 
   @IsNotEmpty()
   @IsString()
@@ -37,7 +37,7 @@ export class RegisterDto {
 
   @IsOptional()
   @IsEnum(Gender)
-  gender?: Gender;
+  gender: Gender;
 
   @IsNotEmpty()
   @IsString()

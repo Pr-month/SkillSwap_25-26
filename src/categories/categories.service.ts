@@ -43,9 +43,9 @@ export class CategoriesService {
           'Категория не может быть родителем самой себя',
         );
       }
-      if (dto.parentId === (null as any)) {
+      if (dto.parentId === null) {
         // сброс родителя
-        category.parent = null as any;
+        category.parent = null;
       } else {
         const parent = await this.categoriesRepository.findOne({
           where: { id: dto.parentId },
