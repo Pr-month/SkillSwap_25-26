@@ -5,6 +5,7 @@ import {
   IsEnum,
   IsOptional,
   IsDate,
+  IsArray,
 } from 'class-validator';
 import { Gender } from '../enums';
 
@@ -40,4 +41,8 @@ export class CreateUserDto {
   @IsNotEmpty()
   @IsString()
   avatar: string;
+
+  @IsArray()
+  @IsOptional()
+  categoryIds?: string[];
 }

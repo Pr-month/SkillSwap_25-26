@@ -4,19 +4,22 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { PaginatedUsersResponseDto } from './dto/paginated-users-response.dto';
+import { Category } from 'src/categories/entities/categories.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(Category)
+    private categoriesRepository: Repository<Category>,
   ) {}
 
   async findAll(): Promise<User[]> {
@@ -50,8 +53,20 @@ export class UsersService {
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
+    let categories: Category[] = [];
+
+    // Проверяем наличие категорий
+    if (createUserDto.categoryIds) {
+      categories = await this.findOrValidateCategories(
+        createUserDto.categoryIds,
+      );
+    }
+
     // Пароль уже должен быть захеширован в AuthService
-    const user = this.usersRepository.create(createUserDto);
+    const user = this.usersRepository.create({
+      ...createUserDto,
+      wantToLearn: categories,
+    });
 
     return this.usersRepository.save(user);
   }
@@ -92,6 +107,13 @@ export class UsersService {
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id);
 
+    if (updateUserDto.categoryIds !== undefined) {
+      const categories = await this.findOrValidateCategories(
+        updateUserDto.categoryIds,
+      );
+      user.wantToLearn = categories;
+    }
+
     // Обновляем только переданные поля
     Object.assign(user, updateUserDto);
 
@@ -125,6 +147,12 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
+  async delete(id: string): Promise<void> {
+    const user = await this.findOne(id);
+    if (!user) throw new NotFoundException(`Пользователь с ID ${id} не найден`);
+    await this.usersRepository.delete(id);
+  }
+
   /**
    * Проверяет пароль пользователя (полезно для AuthService)
    */
@@ -139,5 +167,23 @@ export class UsersService {
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     return isPasswordValid ? user : null;
+  }
+
+  async findOrValidateCategories(categoryIds: string[]): Promise<Category[]> {
+    if (!categoryIds || categoryIds.length === 0) {
+      return [];
+    }
+
+    const categories = await this.categoriesRepository.find({
+      where: {
+        id: In(categoryIds),
+      },
+    });
+
+    if (categories.length !== categoryIds.length) {
+      throw new NotFoundException('Одна или несколько категорий не найдены');
+    }
+
+    return categories;
   }
 }
