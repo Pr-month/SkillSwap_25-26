@@ -11,7 +11,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { PaginatedUsersResponseDto } from './dto/paginated-users-response.dto';
-import { Category } from 'src/categories/entities/categories.entity';
+import { Category } from '../categories/entities/categories.entity';
 
 @Injectable()
 export class UsersService {
