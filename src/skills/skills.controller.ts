@@ -24,7 +24,10 @@ export class SkillsController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  async create(@Body() createSkillDto: CreateSkillDto, @Request() req: AuthenticatedRequest) {
+  async create(
+    @Body() createSkillDto: CreateSkillDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
     createSkillDto.ownerId = req.user.userId;
     return this.skillsService.create(createSkillDto);
   }
@@ -48,8 +51,11 @@ export class SkillsController {
 
   @Delete(':id/favorite')
   @UseGuards(JwtAuthGuard)
-  async removeFromFavorites(@Param('id') id: string, @Request() req) {
-      return this.skillsService.removeFromFavorites(id, req.user.id);
+  async removeFromFavorites(
+    @Param('id') id: string,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    return this.skillsService.removeFromFavorites(id, req.user.userId);
   }
 
   @UseGuards(JwtAuthGuard)

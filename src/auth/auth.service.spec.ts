@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UnauthorizedException } from '@nestjs/common';
@@ -42,7 +41,9 @@ const createMockUser = (overrides: Partial<User> = {}): User => ({
 });
 
 // Helper функция для создания mock refresh token
-const createMockRefreshToken = (overrides: Partial<RefreshToken> = {}): RefreshToken => ({
+const createMockRefreshToken = (
+  overrides: Partial<RefreshToken> = {},
+): RefreshToken => ({
   id: 1,
   token: 'refresh-token-123',
   isActive: true,
@@ -55,10 +56,6 @@ const createMockRefreshToken = (overrides: Partial<RefreshToken> = {}): RefreshT
 
 describe('AuthService', () => {
   let service: AuthService;
-  let refreshTokenRepository: Repository<RefreshToken>;
-  let usersService: UsersService;
-  let jwtService: JwtService;
-  let configService: ConfigService;
 
   const mockRefreshTokenRepository = {
     findOne: jest.fn(),
@@ -107,10 +104,6 @@ describe('AuthService', () => {
     }).compile();
 
     service = module.get<AuthService>(AuthService);
-    refreshTokenRepository = module.get<Repository<RefreshToken>>(getRepositoryToken(RefreshToken));
-    usersService = module.get<UsersService>(UsersService);
-    jwtService = module.get<JwtService>(JwtService);
-    configService = module.get<ConfigService>(ConfigService);
   });
 
   it('should be defined', () => {
@@ -142,7 +135,9 @@ describe('AuthService', () => {
       // Мокаем создание пользователя
       mockUsersService.create.mockResolvedValue(mockUser);
       // Мокаем generateTokens через spy
-      const generateTokensSpy = jest.spyOn(service as any, 'generateTokens').mockResolvedValue(expectedTokens);
+      const generateTokensSpy = jest
+        .spyOn(service as any, 'generateTokens')
+        .mockResolvedValue(expectedTokens);
 
       const result = await service.register(registerDto);
 
@@ -170,9 +165,13 @@ describe('AuthService', () => {
       };
 
       (mockedBcrypt.hash as any).mockResolvedValue('hashedPassword');
-      mockUsersService.create.mockRejectedValue(new Error('User creation failed'));
+      mockUsersService.create.mockRejectedValue(
+        new Error('User creation failed'),
+      );
 
-      await expect(service.register(registerDto)).rejects.toThrow('User creation failed');
+      await expect(service.register(registerDto)).rejects.toThrow(
+        'User creation failed',
+      );
     });
   });
 
@@ -191,12 +190,19 @@ describe('AuthService', () => {
 
       mockUsersService.findByEmailWithPassword.mockResolvedValue(mockUser);
       (mockedBcrypt.compare as any).mockResolvedValue(true);
-      const generateTokensSpy = jest.spyOn(service as any, 'generateTokens').mockResolvedValue(expectedTokens);
+      const generateTokensSpy = jest
+        .spyOn(service as any, 'generateTokens')
+        .mockResolvedValue(expectedTokens);
 
       const result = await service.login(loginDto);
 
-      expect(mockUsersService.findByEmailWithPassword).toHaveBeenCalledWith(loginDto.email);
-      expect(mockedBcrypt.compare).toHaveBeenCalledWith(loginDto.password, mockUser.password);
+      expect(mockUsersService.findByEmailWithPassword).toHaveBeenCalledWith(
+        loginDto.email,
+      );
+      expect(mockedBcrypt.compare).toHaveBeenCalledWith(
+        loginDto.password,
+        mockUser.password,
+      );
       expect(generateTokensSpy).toHaveBeenCalledWith(mockUser.id);
       expect(result).toEqual(expectedTokens);
     });
@@ -210,10 +216,12 @@ describe('AuthService', () => {
       mockUsersService.findByEmailWithPassword.mockResolvedValue(null);
 
       await expect(service.login(loginDto)).rejects.toThrow(
-        new UnauthorizedException('Неверные учетные данные')
+        new UnauthorizedException('Неверные учетные данные'),
       );
 
-      expect(mockUsersService.findByEmailWithPassword).toHaveBeenCalledWith(loginDto.email);
+      expect(mockUsersService.findByEmailWithPassword).toHaveBeenCalledWith(
+        loginDto.email,
+      );
       expect(mockedBcrypt.compare).not.toHaveBeenCalled();
     });
 
@@ -229,11 +237,16 @@ describe('AuthService', () => {
       (mockedBcrypt.compare as any).mockResolvedValue(false);
 
       await expect(service.login(loginDto)).rejects.toThrow(
-        new UnauthorizedException('Неверные учетные данные')
+        new UnauthorizedException('Неверные учетные данные'),
       );
 
-      expect(mockUsersService.findByEmailWithPassword).toHaveBeenCalledWith(loginDto.email);
-      expect(mockedBcrypt.compare).toHaveBeenCalledWith(loginDto.password, mockUser.password);
+      expect(mockUsersService.findByEmailWithPassword).toHaveBeenCalledWith(
+        loginDto.email,
+      );
+      expect(mockedBcrypt.compare).toHaveBeenCalledWith(
+        loginDto.password,
+        mockUser.password,
+      );
     });
   });
 
@@ -256,7 +269,9 @@ describe('AuthService', () => {
 
       mockRefreshTokenRepository.findOne.mockResolvedValue(mockRefreshToken);
       mockRefreshTokenRepository.save.mockResolvedValue(mockRefreshToken);
-      const generateTokensSpy = jest.spyOn(service as any, 'generateTokens').mockResolvedValue(expectedTokens);
+      const generateTokensSpy = jest
+        .spyOn(service as any, 'generateTokens')
+        .mockResolvedValue(expectedTokens);
 
       const result = await service.refreshTokens(refreshTokenDto);
 
@@ -280,7 +295,7 @@ describe('AuthService', () => {
       mockRefreshTokenRepository.findOne.mockResolvedValue(null);
 
       await expect(service.refreshTokens(refreshTokenDto)).rejects.toThrow(
-        new UnauthorizedException('Invalid refresh token')
+        new UnauthorizedException('Invalid refresh token'),
       );
 
       expect(mockRefreshTokenRepository.findOne).toHaveBeenCalledWith({
@@ -304,7 +319,7 @@ describe('AuthService', () => {
       mockRefreshTokenRepository.save.mockResolvedValue(expiredRefreshToken);
 
       await expect(service.refreshTokens(refreshTokenDto)).rejects.toThrow(
-        new UnauthorizedException('Refresh token expired')
+        new UnauthorizedException('Refresh token expired'),
       );
 
       expect(mockRefreshTokenRepository.save).toHaveBeenCalledWith({
@@ -331,7 +346,9 @@ describe('AuthService', () => {
 
       mockRefreshTokenRepository.findOne.mockResolvedValue(mockRefreshToken);
       mockRefreshTokenRepository.save.mockResolvedValue(mockRefreshToken);
-      const generateTokensSpy = jest.spyOn(service as any, 'generateTokens').mockResolvedValue(expectedTokens);
+      const generateTokensSpy = jest
+        .spyOn(service as any, 'generateTokens')
+        .mockResolvedValue(expectedTokens);
 
       const result = await service.refreshTokensByToken(refreshTokenString);
 
@@ -348,9 +365,9 @@ describe('AuthService', () => {
 
       mockRefreshTokenRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.refreshTokensByToken(refreshTokenString)).rejects.toThrow(
-        new UnauthorizedException('Invalid refresh token')
-      );
+      await expect(
+        service.refreshTokensByToken(refreshTokenString),
+      ).rejects.toThrow(new UnauthorizedException('Invalid refresh token'));
     });
   });
 
@@ -364,7 +381,7 @@ describe('AuthService', () => {
 
       expect(mockRefreshTokenRepository.update).toHaveBeenCalledWith(
         { userId, isActive: true },
-        { isActive: false }
+        { isActive: false },
       );
       expect(result).toEqual({
         success: true,
@@ -381,7 +398,7 @@ describe('AuthService', () => {
 
       expect(mockRefreshTokenRepository.update).toHaveBeenCalledWith(
         { userId, isActive: true },
-        { isActive: false }
+        { isActive: false },
       );
       expect(result).toEqual({
         success: true,
@@ -399,45 +416,54 @@ describe('AuthService', () => {
       const refreshToken = 'generated-refresh-token';
 
       mockUsersService.findOne.mockResolvedValue(mockUser);
-      mockConfigService.get.mockImplementation((key: string, defaultValue?: string) => {
-        switch (key) {
-          case 'JWT_ACCESS_EXPIRES_IN':
-            return '1h';
-          case 'JWT_REFRESH_EXPIRES_IN':
-            return '7d';
-          case 'JWT_ACCESS_SECRET':
-            return 'access-secret';
-          case 'JWT_REFRESH_SECRET':
-            return 'refresh-secret';
-          default:
-            return defaultValue;
-        }
-      });
+      mockConfigService.get.mockImplementation(
+        (key: string, defaultValue?: string) => {
+          switch (key) {
+            case 'JWT_ACCESS_EXPIRES_IN':
+              return '1h';
+            case 'JWT_REFRESH_EXPIRES_IN':
+              return '7d';
+            case 'JWT_ACCESS_SECRET':
+              return 'access-secret';
+            case 'JWT_REFRESH_SECRET':
+              return 'refresh-secret';
+            default:
+              return defaultValue;
+          }
+        },
+      );
 
       mockJwtService.sign
         .mockReturnValueOnce(accessToken)
         .mockReturnValueOnce(refreshToken);
 
-      mockRefreshTokenRepository.save.mockResolvedValue(createMockRefreshToken());
+      mockRefreshTokenRepository.save.mockResolvedValue(
+        createMockRefreshToken(),
+      );
 
       // Вызываем приватный метод напрямую
       const result = await (service as any).generateTokens(userId);
 
       expect(mockUsersService.findOne).toHaveBeenCalledWith(userId);
       expect(mockJwtService.sign).toHaveBeenCalledTimes(2);
-      
+
       // Проверяем вызов для access token
       expect(mockJwtService.sign).toHaveBeenNthCalledWith(
         1,
         { sub: mockUser.id, email: mockUser.email, role: mockUser.role },
-        { secret: 'access-secret', expiresIn: '1h' }
+        { secret: 'access-secret', expiresIn: '1h' },
       );
 
       // Проверяем вызов для refresh token
       expect(mockJwtService.sign).toHaveBeenNthCalledWith(
         2,
-        { sub: mockUser.id, email: mockUser.email, role: mockUser.role, tokenType: 'refresh' },
-        { secret: 'refresh-secret', expiresIn: '7d' }
+        {
+          sub: mockUser.id,
+          email: mockUser.email,
+          role: mockUser.role,
+          tokenType: 'refresh',
+        },
+        { secret: 'refresh-secret', expiresIn: '7d' },
       );
 
       expect(mockRefreshTokenRepository.save).toHaveBeenCalledWith({
@@ -459,28 +485,37 @@ describe('AuthService', () => {
       const mockUser = createMockUser({ id: userId });
 
       mockUsersService.findOne.mockResolvedValue(mockUser);
-      mockConfigService.get.mockImplementation((key: string, defaultValue?: string) => {
-        return defaultValue;
-      });
+      mockConfigService.get.mockImplementation(
+        (key: string, defaultValue?: string) => {
+          return defaultValue;
+        },
+      );
 
       mockJwtService.sign
         .mockReturnValueOnce('access-token')
         .mockReturnValueOnce('refresh-token');
 
-      mockRefreshTokenRepository.save.mockResolvedValue(createMockRefreshToken());
+      mockRefreshTokenRepository.save.mockResolvedValue(
+        createMockRefreshToken(),
+      );
 
       await (service as any).generateTokens(userId);
 
       expect(mockJwtService.sign).toHaveBeenNthCalledWith(
         1,
         { sub: mockUser.id, email: mockUser.email, role: mockUser.role },
-        { secret: 'test', expiresIn: '1h' }
+        { secret: 'test', expiresIn: '1h' },
       );
 
       expect(mockJwtService.sign).toHaveBeenNthCalledWith(
         2,
-        { sub: mockUser.id, email: mockUser.email, role: mockUser.role, tokenType: 'refresh' },
-        { secret: 'default-refresh-secret', expiresIn: '7d' }
+        {
+          sub: mockUser.id,
+          email: mockUser.email,
+          role: mockUser.role,
+          tokenType: 'refresh',
+        },
+        { secret: 'default-refresh-secret', expiresIn: '7d' },
       );
     });
   });
