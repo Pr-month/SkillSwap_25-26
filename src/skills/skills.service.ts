@@ -38,7 +38,7 @@ export class SkillsService {
     const owner = await this.userRepository.findOneBy({
       id: createSkillDto.ownerId,
     });
-  
+
     if (!owner) {
       throw new NotFoundException('Пользователь не найден');
     }
@@ -47,7 +47,7 @@ export class SkillsService {
     const skill = this.skillRepository.create({
       ...createSkillDto,
       category,
-      owner
+      owner,
     });
 
     // Сохраняем навык
@@ -131,12 +131,17 @@ export class SkillsService {
   }
 
   async removeFromFavorites(skillId: string, userId: string): Promise<void> {
-    const user = await this.userRepository.findOne({ where: { id: userId }, relations: ['favoriteSkills'] });
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['favoriteSkills'],
+    });
     if (!user) throw new NotFoundException('User not found');
 
-    user.favoriteSkills = user.favoriteSkills.filter(skill => skill.id !== skillId);
+    user.favoriteSkills = user.favoriteSkills.filter(
+      (skill) => skill.id !== skillId,
+    );
     await this.userRepository.save(user);
-}
+  }
 
   /**
    * Удаляет изображения навыка из файловой системы

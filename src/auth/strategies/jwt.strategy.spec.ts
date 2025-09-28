@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './jwt.strategy';
 import { UsersService } from '../../users/users.service';
 import { Gender, UserRole } from '../../users/enums';
+import { User } from '../../users/entities/user.entity';
 
 describe('JwtStrategy', () => {
   let strategy: JwtStrategy;
@@ -49,7 +50,7 @@ describe('JwtStrategy', () => {
       role: UserRole.USER,
       createdAt: new Date(),
     };
-    jest.spyOn(usersService, 'findOne').mockResolvedValue(mockUser as any);
+    jest.spyOn(usersService, 'findOne').mockResolvedValue(mockUser as User);
 
     const payload = {
       sub: 'uuid-123',

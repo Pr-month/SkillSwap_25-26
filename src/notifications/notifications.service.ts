@@ -16,7 +16,9 @@ export class NotificationsService {
     private notificationsGateway: NotificationsGateway,
   ) {}
 
-  async create(createNotificationDto: CreateNotificationDto): Promise<Notification> {
+  async create(
+    createNotificationDto: CreateNotificationDto,
+  ): Promise<Notification> {
     const { userId, type, title, message, data } = createNotificationDto;
 
     const user = await this.userRepository.findOne({ where: { id: userId } });
@@ -33,7 +35,8 @@ export class NotificationsService {
       isRead: false,
     });
 
-    const savedNotification = await this.notificationRepository.save(notification);
+    const savedNotification =
+      await this.notificationRepository.save(notification);
 
     // Отправляем уведомление через WebSocket
     this.notificationsGateway.sendNotificationToUser(userId, savedNotification);
@@ -52,14 +55,14 @@ export class NotificationsService {
   async markAsRead(id: string, userId: string): Promise<void> {
     await this.notificationRepository.update(
       { id, user: { id: userId } },
-      { isRead: true }
+      { isRead: true },
     );
   }
 
   async markAllAsRead(userId: string): Promise<void> {
     await this.notificationRepository.update(
       { user: { id: userId }, isRead: false },
-      { isRead: true }
+      { isRead: true },
     );
   }
 
@@ -74,7 +77,7 @@ export class NotificationsService {
     receiverId: string,
     senderName: string,
     skillName: string,
-    requestId: string
+    requestId: string,
   ): Promise<Notification> {
     return this.create({
       userId: receiverId,
@@ -89,19 +92,20 @@ export class NotificationsService {
     userId: string,
     status: 'accepted' | 'rejected',
     skillName: string,
-    requestId: string
+    requestId: string,
   ): Promise<Notification> {
-    const type = status === 'accepted' 
-      ? NotificationType.REQUEST_ACCEPTED 
-      : NotificationType.REQUEST_REJECTED;
-    
-    const title = status === 'accepted' 
-      ? 'Заявка принята!' 
-      : 'Заявка отклонена';
-    
-    const message = status === 'accepted'
-      ? `Ваша заявка на обмен навыком "${skillName}" была принята`
-      : `Ваша заявка на обмен навыком "${skillName}" была отклонена`;
+    const type =
+      status === 'accepted'
+        ? NotificationType.REQUEST_ACCEPTED
+        : NotificationType.REQUEST_REJECTED;
+
+    const title =
+      status === 'accepted' ? 'Заявка принята!' : 'Заявка отклонена';
+
+    const message =
+      status === 'accepted'
+        ? `Ваша заявка на обмен навыком "${skillName}" была принята`
+        : `Ваша заявка на обмен навыком "${skillName}" была отклонена`;
 
     return this.create({
       userId,

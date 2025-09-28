@@ -19,7 +19,7 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
 
   async register(registerDto: RegisterDto): Promise<TokensDto> {
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
@@ -33,12 +33,17 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto): Promise<TokensDto> {
-    const user = await this.usersService.findByEmailWithPassword(loginDto.email);
+    const user = await this.usersService.findByEmailWithPassword(
+      loginDto.email,
+    );
     if (!user) {
       throw new UnauthorizedException('Неверные учетные данные');
     }
 
-    const isPasswordValid = await bcrypt.compare(loginDto.password, user.password);
+    const isPasswordValid = await bcrypt.compare(
+      loginDto.password,
+      user.password,
+    );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Неверные учетные данные');
     }
@@ -91,8 +96,14 @@ export class AuthService {
 
   private async generateTokens(userId: string): Promise<TokensDto> {
     const user = await this.usersService.findOne(userId);
-    const accessTokenExpiresIn = this.configService.get<string>('JWT_ACCESS_EXPIRES_IN', '1h');
-    const refreshTokenExpiresIn = this.configService.get<string>('JWT_REFRESH_EXPIRES_IN', '7d');
+    const accessTokenExpiresIn = this.configService.get<string>(
+      'JWT_ACCESS_EXPIRES_IN',
+      '1h',
+    );
+    const refreshTokenExpiresIn = this.configService.get<string>(
+      'JWT_REFRESH_EXPIRES_IN',
+      '7d',
+    );
 
     const accessToken = this.jwtService.sign(
       { sub: user.id, email: user.email, role: user.role },
@@ -110,7 +121,10 @@ export class AuthService {
         tokenType: 'refresh',
       },
       {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET', 'default-refresh-secret'),
+        secret: this.configService.get<string>(
+          'JWT_REFRESH_SECRET',
+          'default-refresh-secret',
+        ),
         expiresIn: refreshTokenExpiresIn,
       },
     );
@@ -140,4 +154,3 @@ export class AuthService {
     };
   }
 }
-
