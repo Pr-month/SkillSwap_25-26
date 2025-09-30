@@ -19,7 +19,7 @@ import { SkillsService } from './skills.service';
 
 @Controller('skills')
 export class SkillsController {
-  constructor(private readonly skillsService: SkillsService) {}
+  constructor(private readonly skillsService: SkillsService) { }
 
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -27,8 +27,7 @@ export class SkillsController {
     @Body() createSkillDto: CreateSkillDto,
     @Req() req: AuthenticatedRequest,
   ) {
-    createSkillDto.ownerId = req.user.userId;
-    return this.skillsService.create(createSkillDto);
+    return this.skillsService.create(createSkillDto, req.user.userId);
   }
 
   @Get()
