@@ -12,6 +12,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { PaginatedUsersResponseDto } from './dto/paginated-users-response.dto';
 import { Category } from 'src/categories/entities/categories.entity';
+import { Skill } from 'src/skills/entities/skill.entity';
 
 @Injectable()
 export class UsersService {
@@ -20,6 +21,8 @@ export class UsersService {
     private usersRepository: Repository<User>,
     @InjectRepository(Category)
     private categoriesRepository: Repository<Category>,
+    @InjectRepository(Skill)
+    private skillsRepository: Repository<Skill>,
   ) {}
 
   async findAll(): Promise<User[]> {
@@ -185,5 +188,43 @@ export class UsersService {
     }
 
     return categories;
+  }
+
+  async findBySkill(skillId: string): Promise<User[]> {
+    // Находим навык по ID с владельцем и его категориями wantToLearn
+    const skill = await this.skillsRepository.findOne({
+      where: { id: skillId },
+      relations: ['owner', 'owner.wantToLearn'],
+    });
+
+    if (!skill) {
+      throw new NotFoundException(`Навык с ID ${skillId} не найден`);
+    }
+
+    if (!skill.owner) {
+      throw new NotFoundException(`Владелец навыка не найден`);
+    }
+
+    // Получаем категории, которые хочет изучить владелец навыка
+    const ownerWantToLearnCategoryIds: string[] = skill.owner.wantToLearn.map(
+      (category: Category) => category.id,
+    );
+
+    if (ownerWantToLearnCategoryIds.length === 0) {
+      return []; // Если у владельца нет категорий для изучения, возвращаем пустой массив
+    }
+
+    // Находим пользователей, у которых в wantToLearn есть хотя бы одна из категорий владельца навыка
+    const users = await this.usersRepository.find({
+      where: {
+        wantToLearn: {
+          id: In(ownerWantToLearnCategoryIds),
+        },
+      },
+      relations: ['wantToLearn'],
+      take: 10, // Лимит 10 пользователей
+    });
+
+    return users;
   }
 }
