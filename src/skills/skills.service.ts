@@ -51,7 +51,19 @@ export class SkillsService {
     });
 
     // Сохраняем навык
-    return this.skillRepository.save(skill);
+    const savedSkill = await this.skillRepository.save(skill);
+
+    // Возвращаем навык с загруженными связями (включая владельца)
+    const skillWithRelations = await this.skillRepository.findOne({
+      where: { id: savedSkill.id },
+      relations: ['owner', 'category'],
+    });
+
+    if (!skillWithRelations) {
+      throw new NotFoundException('Ошибка при создании навыка');
+    }
+
+    return skillWithRelations;
   }
 
   async findOne(id: string) {
