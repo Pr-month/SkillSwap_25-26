@@ -42,6 +42,11 @@ export class UsersController {
     return this.usersService.findAllPaginated(page, limit);
   }
 
+  @Get('by-skill/:id')
+  async findBySkill(@Param('id') skillId: string): Promise<User[]> {
+    return this.usersService.findBySkill(skillId);
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<User> {
     return this.usersService.findOne(id);
