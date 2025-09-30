@@ -8,6 +8,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import type { IAppConfig } from './config';
 import { AllExpectionFilter } from './common/all-exception.filter';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -31,6 +32,15 @@ async function bootstrap() {
   app.useStaticAssets(join(__dirname, '..', 'public'), {
     prefix: '/public/',
   });
+
+  // Подключение swagger-документации. swagger-ui досутпен по адресу /docs
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('SkillSwap API')
+    .setDescription('API документация проекта SkillSwap')
+    .setVersion('1.0')
+    .build();
+  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('docs', app, swaggerDocument);
 
   // Получаем типизированный конфиг приложения
   const configService = app.get(ConfigService);

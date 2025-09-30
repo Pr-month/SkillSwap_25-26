@@ -6,8 +6,9 @@ import {
   IsEnum,
   IsOptional,
   IsDateString,
+  IsArray
 } from 'class-validator';
-import { Gender } from 'src/users/enums';
+import { Gender } from '../../users/enums';
 
 export class RegisterDto {
   @IsString({ message: 'Имя должно быть строкой' })
@@ -42,4 +43,8 @@ export class RegisterDto {
   @IsNotEmpty()
   @IsString()
   avatar: string;
+
+  @IsArray()
+  @IsOptional()
+  categoryIds?: string[];
 }
