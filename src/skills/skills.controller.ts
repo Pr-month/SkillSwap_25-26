@@ -27,8 +27,7 @@ export class SkillsController {
     @Body() createSkillDto: CreateSkillDto,
     @Req() req: AuthenticatedRequest,
   ) {
-    createSkillDto.ownerId = req.user.userId;
-    return this.skillsService.create(createSkillDto);
+    return this.skillsService.create(createSkillDto, req.user.userId);
   }
 
   @Get()

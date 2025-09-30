@@ -26,7 +26,7 @@ export class SkillsService {
     private categoryRepository: Repository<Category>,
   ) {}
 
-  async create(createSkillDto: CreateSkillDto): Promise<Skill> {
+  async create(createSkillDto: CreateSkillDto, ownerId: string): Promise<Skill> {
     // Сначала находим категорию по ID
     const category = await this.categoryRepository.findOneBy({
       id: createSkillDto.categoryId,
@@ -36,7 +36,7 @@ export class SkillsService {
       throw new NotFoundException('Категория не найдена');
     }
     const owner = await this.userRepository.findOneBy({
-      id: createSkillDto.ownerId,
+      id: ownerId,
     });
 
     if (!owner) {
