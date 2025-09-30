@@ -8,7 +8,7 @@ import {
   IsDateString,
   IsArray
 } from 'class-validator';
-import { Gender } from 'src/users/enums';
+import { Gender } from '../../users/enums';
 
 export class RegisterDto {
   @IsString({ message: 'Имя должно быть строкой' })
