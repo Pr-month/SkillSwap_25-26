@@ -9,6 +9,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Notification } from './entities/notification.entity';
+import { JwtWsGuard } from './guards/ws-jwt.guard';
 
 @WebSocketGateway({
   cors: {
@@ -23,8 +24,13 @@ export class NotificationsGateway
 
   private userConnections = new Map<string, Socket>();
 
-  handleConnection(client: Socket) {
-    console.log(`Client connected: ${client.id}`);
+  constructor(private readonly jwtWsGuard: JwtWsGuard) {}
+
+  async handleConnection(client: Socket) {
+    const authedClient = await this.jwtWsGuard.verify(client);
+    const userId = authedClient.data.user.userId;
+    this.userConnections.set(userId, authedClient);
+    console.log(`Client connected: ${client.id} as user ${userId}`);
   }
 
   handleDisconnect(client: Socket) {
@@ -45,7 +51,7 @@ export class NotificationsGateway
   ) {
     // Сохраняем соединение пользователя
     this.userConnections.set(data.userId, client);
-    client.join(`user_${data.userId}`);
+    void client.join(`user_${data.userId}`);
     console.log(`User ${data.userId} joined notifications room`);
   }
 
@@ -55,7 +61,7 @@ export class NotificationsGateway
     @ConnectedSocket() client: Socket,
   ) {
     this.userConnections.delete(data.userId);
-    client.leave(`user_${data.userId}`);
+    void client.leave(`user_${data.userId}`);
     console.log(`User ${data.userId} left notifications room`);
   }
 
