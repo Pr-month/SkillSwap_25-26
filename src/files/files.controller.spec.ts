@@ -20,7 +20,7 @@ describe('FilesController', () => {
     destination: '',
     filename: '',
     path: '',
-    stream: null,
+    stream: null as any,
   };
 
   beforeEach(async () => {
