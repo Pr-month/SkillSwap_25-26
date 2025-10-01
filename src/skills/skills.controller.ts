@@ -19,12 +19,15 @@ import { SkillsService } from './skills.service';
 
 @Controller('skills')
 export class SkillsController {
-  constructor(private readonly skillsService: SkillsService) {}
+  constructor(private readonly skillsService: SkillsService) { }
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  async create(@Body() createSkillDto: CreateSkillDto) {
-    return this.skillsService.create(createSkillDto);
+  async create(
+    @Body() createSkillDto: CreateSkillDto,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.skillsService.create(createSkillDto, req.user.userId);
   }
 
   @Get()
@@ -42,6 +45,15 @@ export class SkillsController {
     @Body() updateSkillDto: UpdateSkillDto,
   ) {
     return this.skillsService.update(id, updateSkillDto);
+  }
+
+  @Delete(':id/favorite')
+  @UseGuards(JwtAuthGuard)
+  async removeFromFavorites(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.skillsService.removeFromFavorites(id, req.user.userId);
   }
 
   @UseGuards(JwtAuthGuard)

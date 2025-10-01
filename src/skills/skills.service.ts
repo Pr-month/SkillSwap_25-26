@@ -26,7 +26,7 @@ export class SkillsService {
     private categoryRepository: Repository<Category>,
   ) {}
 
-  async create(createSkillDto: CreateSkillDto): Promise<Skill> {
+  async create(createSkillDto: CreateSkillDto, ownerId: string): Promise<Skill> {
     // Сначала находим категорию по ID
     const category = await this.categoryRepository.findOneBy({
       id: createSkillDto.categoryId,
@@ -35,11 +35,19 @@ export class SkillsService {
     if (!category) {
       throw new NotFoundException('Категория не найдена');
     }
+    const owner = await this.userRepository.findOneBy({
+      id: ownerId,
+    });
+
+    if (!owner) {
+      throw new NotFoundException('Пользователь не найден');
+    }
 
     // Создаем новый навык
     const skill = this.skillRepository.create({
       ...createSkillDto,
       category,
+      owner,
     });
 
     // Сохраняем навык
@@ -120,6 +128,19 @@ export class SkillsService {
     await this.userRepository.save(user);
 
     return { message: 'Навык успешно добавлен в избранное' };
+  }
+
+  async removeFromFavorites(skillId: string, userId: string): Promise<void> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['favoriteSkills'],
+    });
+    if (!user) throw new NotFoundException('User not found');
+
+    user.favoriteSkills = user.favoriteSkills.filter(
+      (skill) => skill.id !== skillId,
+    );
+    await this.userRepository.save(user);
   }
 
   /**

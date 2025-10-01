@@ -4,11 +4,12 @@ import {
   Column,
   ManyToMany,
   JoinTable,
+  OneToMany,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { Gender, UserRole } from '../enums';
 import { Skill } from '../../skills/entities/skill.entity';
-// import { Category } from './category.entity';
+import { Category } from '../../categories/entities/categories.entity';
 
 @Entity('users')
 export class User {
@@ -60,11 +61,12 @@ export class User {
   @Column({ type: 'varchar', nullable: true })
   avatar: string;
 
-  // @ManyToMany(() => Skill, skill => skill.owners, { eager: true })
-  // skills: Skill[];
+  @OneToMany(() => Skill, (skill) => skill.owner)
+  skills: Skill[];
 
-  // @ManyToMany(() => Category, category => category.learners, { eager: true })
-  // wantToLearn: Category[];
+  @ManyToMany(() => Category, { eager: true })
+  @JoinTable()
+  wantToLearn: Category[];
 
   @ManyToMany(() => Skill, (skill) => skill.favoritedBy)
   @JoinTable({

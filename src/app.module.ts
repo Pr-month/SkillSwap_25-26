@@ -17,6 +17,7 @@ import { FilesModule } from './files/files.module';
 import { appConfig, jwtConfig, databaseConfig } from './config';
 import type { IJwtConfig, IDatabaseConfig } from './config';
 import { RequestsModule } from './requests/requests.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -50,7 +51,7 @@ import { RequestsModule } from './requests/requests.module';
     CategoriesModule,
     FilesModule,
     RequestsModule,
-    CategoriesModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

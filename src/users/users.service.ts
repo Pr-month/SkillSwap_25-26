@@ -4,19 +4,26 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { PaginatedUsersResponseDto } from './dto/paginated-users-response.dto';
+import { Category } from '../categories/entities/categories.entity';
+import { Skill } from '../skills/entities/skill.entity';
+
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(Category)
+    private categoriesRepository: Repository<Category>,
+    @InjectRepository(Skill)
+    private skillsRepository: Repository<Skill>,
   ) {}
 
   async findAll(): Promise<User[]> {
@@ -50,8 +57,20 @@ export class UsersService {
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
+    let categories: Category[] = [];
+
+    // Проверяем наличие категорий
+    if (createUserDto.categoryIds) {
+      categories = await this.findOrValidateCategories(
+        createUserDto.categoryIds,
+      );
+    }
+
     // Пароль уже должен быть захеширован в AuthService
-    const user = this.usersRepository.create(createUserDto);
+    const user = this.usersRepository.create({
+      ...createUserDto,
+      wantToLearn: categories,
+    });
 
     return this.usersRepository.save(user);
   }
@@ -92,6 +111,13 @@ export class UsersService {
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id);
 
+    if (updateUserDto.categoryIds !== undefined) {
+      const categories = await this.findOrValidateCategories(
+        updateUserDto.categoryIds,
+      );
+      user.wantToLearn = categories;
+    }
+
     // Обновляем только переданные поля
     Object.assign(user, updateUserDto);
 
@@ -125,6 +151,12 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
+  async delete(id: string): Promise<void> {
+    const user = await this.findOne(id);
+    if (!user) throw new NotFoundException(`Пользователь с ID ${id} не найден`);
+    await this.usersRepository.delete(id);
+  }
+
   /**
    * Проверяет пароль пользователя (полезно для AuthService)
    */
@@ -139,5 +171,61 @@ export class UsersService {
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     return isPasswordValid ? user : null;
+  }
+
+  async findOrValidateCategories(categoryIds: string[]): Promise<Category[]> {
+    if (!categoryIds || categoryIds.length === 0) {
+      return [];
+    }
+
+    const categories = await this.categoriesRepository.find({
+      where: {
+        id: In(categoryIds),
+      },
+    });
+
+    if (categories.length !== categoryIds.length) {
+      throw new NotFoundException('Одна или несколько категорий не найдены');
+    }
+
+    return categories;
+  }
+
+  async findBySkill(skillId: string): Promise<User[]> {
+    // Находим навык по ID с владельцем и его категориями wantToLearn
+    const skill = await this.skillsRepository.findOne({
+      where: { id: skillId },
+      relations: ['owner', 'owner.wantToLearn'],
+    });
+
+    if (!skill) {
+      throw new NotFoundException(`Навык с ID ${skillId} не найден`);
+    }
+
+    if (!skill.owner) {
+      throw new NotFoundException(`Владелец навыка не найден`);
+    }
+
+    // Получаем категории, которые хочет изучить владелец навыка
+    const ownerWantToLearnCategoryIds: string[] = skill.owner.wantToLearn.map(
+      (category: Category) => category.id,
+    );
+
+    if (ownerWantToLearnCategoryIds.length === 0) {
+      return []; // Если у владельца нет категорий для изучения, возвращаем пустой массив
+    }
+
+    // Находим пользователей, у которых в wantToLearn есть хотя бы одна из категорий владельца навыка
+    const users = await this.usersRepository.find({
+      where: {
+        wantToLearn: {
+          id: In(ownerWantToLearnCategoryIds),
+        },
+      },
+      relations: ['wantToLearn'],
+      take: 10, // Лимит 10 пользователей
+    });
+
+    return users;
   }
 }

@@ -1,7 +1,10 @@
+import { UpdateCategoryDto } from './dto/update-category.dto';
 import {
   Body,
   Controller,
   Delete,
+  Get,
+  Patch,
   Param,
   ParseUUIDPipe,
   Post,
@@ -17,6 +20,21 @@ import { CategoriesService } from './categories.service';
 @Controller('categories')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
+
+  @Get()
+  async findAll() {
+    return this.categoriesService.findAll();
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async updateCategory(
+    @Param('id') id: string,
+    @Body() dto: UpdateCategoryDto,
+  ) {
+    return this.categoriesService.update(id, dto);
+  }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)

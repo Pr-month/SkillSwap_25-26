@@ -10,6 +10,7 @@ import {
   Request,
   Req,
   Query,
+  Delete,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
@@ -19,6 +20,9 @@ import { UpdatePasswordDto } from './dto/update-password.dto';
 import { AuthenticatedRequest } from '../auth/interfaces/auth.interface';
 import { PaginationDto } from './dto/pagination.dto';
 import { PaginatedUsersResponseDto } from './dto/paginated-users-response.dto';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { UserRole } from './enums';
+import { Roles } from 'src/auth/decorators/roles.decorator';
 
 @Controller('users')
 export class UsersController {
@@ -36,6 +40,11 @@ export class UsersController {
   ): Promise<PaginatedUsersResponseDto> {
     const { page = 1, limit = 20 } = paginationDto;
     return this.usersService.findAllPaginated(page, limit);
+  }
+
+  @Get('by-skill/:id')
+  async findBySkill(@Param('id') skillId: string): Promise<User[]> {
+    return this.usersService.findBySkill(skillId);
   }
 
   @Get(':id')
@@ -66,5 +75,12 @@ export class UsersController {
   ): Promise<User> {
     const userId = req.user.userId;
     return this.usersService.updatePassword(userId, updatePasswordDto);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async deleteUser(@Param('id') id: string): Promise<void> {
+    await this.usersService.delete(id);
   }
 }

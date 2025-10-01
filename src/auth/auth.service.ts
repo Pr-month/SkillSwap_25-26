@@ -22,29 +22,20 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto): Promise<TokensDto> {
-    const existingUser = await this.usersService.findByEmail(registerDto.email);
-
-    if (existingUser) {
-      throw new UnauthorizedException(
-        'Пользователь с таким email уже существует',
-      );
-    }
-
     const hashedPassword = await bcrypt.hash(registerDto.password, 10);
     const user = await this.usersService.create({
       ...registerDto,
       password: hashedPassword,
+      birthdate: new Date(registerDto.birthdate),
+      gender: registerDto.gender,
     });
-
     return this.generateTokens(user.id);
   }
 
   async login(loginDto: LoginDto): Promise<TokensDto> {
-    // Используем метод с паролем для аутентификации
     const user = await this.usersService.findByEmailWithPassword(
       loginDto.email,
     );
-
     if (!user) {
       throw new UnauthorizedException('Неверные учетные данные');
     }
@@ -62,7 +53,6 @@ export class AuthService {
 
   async refreshTokens(refreshTokenDto: RefreshTokenDto): Promise<TokensDto> {
     const { refreshToken } = refreshTokenDto;
-
     const tokenEntity = await this.refreshTokenRepository.findOne({
       where: { token: refreshToken, isActive: true },
       relations: ['user'],
@@ -80,7 +70,6 @@ export class AuthService {
 
     tokenEntity.isActive = false;
     await this.refreshTokenRepository.save(tokenEntity);
-
     return this.generateTokens(tokenEntity.user.id);
   }
 
@@ -102,13 +91,11 @@ export class AuthService {
 
     tokenEntity.isActive = false;
     await this.refreshTokenRepository.save(tokenEntity);
-
     return this.generateTokens(tokenEntity.user.id);
   }
 
   private async generateTokens(userId: string): Promise<TokensDto> {
     const user = await this.usersService.findOne(userId);
-
     const accessTokenExpiresIn = this.configService.get<string>(
       'JWT_ACCESS_EXPIRES_IN',
       '1h',
@@ -121,7 +108,7 @@ export class AuthService {
     const accessToken = this.jwtService.sign(
       { sub: user.id, email: user.email, role: user.role },
       {
-        secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
+        secret: this.configService.get<string>('JWT_ACCESS_SECRET') || 'test',
         expiresIn: accessTokenExpiresIn,
       },
     );
@@ -157,12 +144,10 @@ export class AuthService {
   }
 
   async logoutUser(userId: string) {
-    // Деактивируем все refresh токены пользователя
     await this.refreshTokenRepository.update(
       { userId, isActive: true },
       { isActive: false },
     );
-
     return {
       success: true,
       message: 'Выход выполнен успешно',

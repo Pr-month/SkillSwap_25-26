@@ -14,4 +14,5 @@ export class CreateSkillDto {
 
   @IsNotEmpty()
   categoryId: string;
+
 }
