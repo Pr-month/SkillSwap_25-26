@@ -30,6 +30,7 @@ export class NotificationsGateway
     const authedClient = await this.jwtWsGuard.verify(client);
     const userId = authedClient.data.user.userId;
     this.userConnections.set(userId, authedClient);
+    void authedClient.join(`user_${userId}`);
     console.log(`Client connected: ${client.id} as user ${userId}`);
   }
 
@@ -42,17 +43,6 @@ export class NotificationsGateway
         break;
       }
     }
-  }
-
-  @SubscribeMessage('join')
-  handleJoin(
-    @MessageBody() data: { userId: string },
-    @ConnectedSocket() client: Socket,
-  ) {
-    // Сохраняем соединение пользователя
-    this.userConnections.set(data.userId, client);
-    void client.join(`user_${data.userId}`);
-    console.log(`User ${data.userId} joined notifications room`);
   }
 
   @SubscribeMessage('leave')
