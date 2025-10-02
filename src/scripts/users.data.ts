@@ -10,12 +10,32 @@ export const AdminUserData = {
   role: UserRole.ADMIN,
 };
 
-export const RegularUserData = {
-  name: 'Иван Иванов',
-  email: 'user@example.com',
-  password: 'user123',
-  about: 'Обычный тестовый пользователь',
-  city: 'Санкт-Петербург',
-  gender: Gender.MALE,
-  role: UserRole.USER,
-};
+export const RegularUsersData = [
+  {
+    name: 'Иван Иванов',
+    email: 'ivan@example.com',
+    password: 'ivan123',
+    about: 'Обычный тестовый пользователь',
+    city: 'Санкт-Петербург',
+    gender: Gender.MALE,
+    role: UserRole.USER,
+  },
+  {
+    name: 'Ольга Петрова',
+    email: 'olga@example.com',
+    password: 'user123',
+    about: 'Еще один пользователь',
+    city: 'Псков',
+    gender: Gender.FEMALE,
+    role: UserRole.USER,
+  },
+  {
+    name: 'Кот Котовский',
+    email: 'cat@example.com',
+    password: 'cat123',
+    about: 'Без кота жизнь не та',
+    city: 'Зеленоградск',
+    gender: Gender.MALE,
+    role: UserRole.USER,
+  },
+];
