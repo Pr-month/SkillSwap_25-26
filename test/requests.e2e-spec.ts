@@ -9,29 +9,29 @@ import { CreateRequestDto } from 'src/requests/dto/create-request.dto';
 import { UpdateRequestDto } from 'src/requests/dto/update-request.dto';
 import { RequestStatus } from 'src/users/enums';
 import { UserRole } from 'src/users/enums';
-import { AdminUserData, RegularUserData } from 'src/scripts/users.data';
+import { AdminUserData, RegularUsersData } from 'src/scripts/users.data';
 
 // Мок-данные на основе сидинг-данных
 const MOCK_USERS = {
   sender: {
     userId: 'sender-user-id',
-    email: RegularUserData.email, // Используем данные из сидинга
-    role: RegularUserData.role,
+    email: RegularUsersData[0].email, // Иван Иванов из сидинга
+    role: RegularUsersData[0].role,
   },
   receiver: {
     userId: 'receiver-user-id',
-    email: 'receiver@example.com',
-    role: UserRole.USER,
+    email: RegularUsersData[1].email, // Ольга Петрова из сидинга
+    role: RegularUsersData[1].role,
   },
   admin: {
     userId: 'admin-user-id',
-    email: AdminUserData.email, // Используем данные из сидинга
+    email: AdminUserData.email, // Администратор из сидинга
     role: AdminUserData.role,
   },
   other: {
     userId: 'other-user-id',
-    email: 'other@example.com',
-    role: UserRole.USER,
+    email: RegularUsersData[2].email, // Кот Котовский из сидинга
+    role: RegularUsersData[2].role,
   },
 };
 
@@ -129,8 +129,8 @@ class MockRequestsService {
     const newRequest = {
       id: `request-${this.requestIdCounter++}`,
       createdAt: new Date(),
-      sender: { id: senderId, email: 'sender@example.com' },
-      receiver: { id: 'receiver-user-id', email: 'receiver@example.com' },
+      sender: { id: senderId, email: MOCK_USERS.sender.email },
+      receiver: { id: 'receiver-user-id', email: MOCK_USERS.receiver.email },
       status: RequestStatus.PENDING,
       offeredSkill: { id: offeredSkillId, title: 'Offered Skill' },
       requestedSkill: { id: requestedSkillId, title: 'Requested Skill' },
@@ -334,18 +334,18 @@ describe('RequestsController (e2e)', () => {
                   email: 'admin@example.com',
                   role: 'admin',
                 };
-              } else if (token === 'sender-token') {
-                request.user = {
-                  userId: 'sender-user-id',
-                  email: 'sender@example.com',
-                  role: 'user',
-                };
-              } else if (token === 'receiver-token') {
-                request.user = {
-                  userId: 'receiver-user-id',
-                  email: 'receiver@example.com',
-                  role: 'user',
-                };
+                  } else if (token === 'sender-token') {
+                    request.user = {
+                      userId: 'sender-user-id',
+                      email: MOCK_USERS.sender.email,
+                      role: 'user',
+                    };
+                  } else if (token === 'receiver-token') {
+                    request.user = {
+                      userId: 'receiver-user-id',
+                      email: MOCK_USERS.receiver.email,
+                      role: 'user',
+                    };
               } else {
                 request.user = {
                   userId: 'mock-user-id',
