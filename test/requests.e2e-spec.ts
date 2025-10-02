@@ -9,13 +9,14 @@ import { CreateRequestDto } from 'src/requests/dto/create-request.dto';
 import { UpdateRequestDto } from 'src/requests/dto/update-request.dto';
 import { RequestStatus } from 'src/users/enums';
 import { UserRole } from 'src/users/enums';
+import { AdminUserData, RegularUserData } from 'src/scripts/users.data';
 
-// Мок-данные
+// Мок-данные на основе сидинг-данных
 const MOCK_USERS = {
   sender: {
     userId: 'sender-user-id',
-    email: 'sender@example.com',
-    role: UserRole.USER,
+    email: RegularUserData.email, // Используем данные из сидинга
+    role: RegularUserData.role,
   },
   receiver: {
     userId: 'receiver-user-id',
@@ -24,8 +25,8 @@ const MOCK_USERS = {
   },
   admin: {
     userId: 'admin-user-id',
-    email: 'admin@example.com',
-    role: UserRole.ADMIN,
+    email: AdminUserData.email, // Используем данные из сидинга
+    role: AdminUserData.role,
   },
   other: {
     userId: 'other-user-id',
