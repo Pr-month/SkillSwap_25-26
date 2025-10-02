@@ -12,6 +12,7 @@ import { Skill } from '../skills/entities/skill.entity';
 import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
 import { RequestStatus } from '../users/enums';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
 
 @Injectable()
 export class RequestsService {
@@ -22,6 +23,7 @@ export class RequestsService {
     private userRepository: Repository<User>,
     @InjectRepository(Skill)
     private skillRepository: Repository<Skill>,
+    private readonly notificationsGateway: NotificationsGateway,
   ) {}
 
   async create(
@@ -95,6 +97,13 @@ export class RequestsService {
       throw new NotFoundException('Ошибка при создании заявки');
     }
 
+    // Отправляем уведомление получателю о новой заявке
+    this.notificationsGateway.notifyNewRequest(receiver.id, {
+      fromUserId: senderId,
+      skillTitle: requestedSkill.title,
+      message: `Поступила новая заявка от пользователя ${senderId}`,
+    });
+
     return result;
   }
 
@@ -166,7 +175,7 @@ export class RequestsService {
     // Находим заявку БЕЗ relations (только для проверки прав)
     const request = await this.requestRepository.findOne({
       where: { id },
-      relations: ['sender', 'receiver'], // только для проверки прав
+      relations: ['sender', 'receiver', 'offeredSkill', 'requestedSkill'],
     });
 
     if (!request) {
@@ -191,6 +200,23 @@ export class RequestsService {
         status: updateRequestDto.status,
       }),
     });
+
+    // Отправка уведомлений по статусам
+    if (updateRequestDto.status === RequestStatus.ACCEPTED) {
+      this.notificationsGateway.notifyAcceptedRequest(request.sender.id, {
+        fromUserId: request.receiver.id,
+        skillTitle: request.requestedSkill.title,
+        message: 'Ваша заявка была принята',
+      });
+    }
+
+    if (updateRequestDto.status === RequestStatus.REJECTED) {
+      this.notificationsGateway.notifyRejectedRequest(request.sender.id, {
+        fromUserId: request.receiver.id,
+        skillTitle: request.requestedSkill.title,
+        message: 'Ваша заявка была отклонена',
+      });
+    }
 
     return { message: 'Заявка успешно обновлена' };
   }

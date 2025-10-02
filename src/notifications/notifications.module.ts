@@ -12,6 +12,6 @@ import { UsersModule } from '../users/users.module';
   imports: [TypeOrmModule.forFeature([Notification, User]), UsersModule],
   controllers: [NotificationsController],
   providers: [NotificationsService, NotificationsGateway, JwtWsGuard],
-  exports: [NotificationsService],
+  exports: [NotificationsService, NotificationsGateway],
 })
 export class NotificationsModule {}
