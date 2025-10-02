@@ -8,7 +8,6 @@ import { RequestsService } from 'src/requests/requests.service';
 import { CreateRequestDto } from 'src/requests/dto/create-request.dto';
 import { UpdateRequestDto } from 'src/requests/dto/update-request.dto';
 import { RequestStatus } from 'src/users/enums';
-import { UserRole } from 'src/users/enums';
 import { AdminUserData, RegularUsersData } from 'src/scripts/users.data';
 
 // Мок-данные на основе сидинг-данных
