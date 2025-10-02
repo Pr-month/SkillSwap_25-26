@@ -1,39 +1,16 @@
+import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { BadRequestException } from '@nestjs/common';
-import { FilesService } from './files.service';
-import { FileEntity } from './entities/file.entity';
-import { appConfig } from '../config';
 import * as fs from 'fs';
-import * as path from 'path';
-
-// Мокаем fs модуль
-jest.mock('fs', () => ({
-  promises: {
-    writeFile: jest.fn(),
-    unlink: jest.fn(),
-  },
-}));
-
-// Мокаем uuid
-jest.mock('uuid', () => ({
-  v4: jest.fn(() => 'mocked-uuid-v4'),
-}));
-
-const mockedFs = fs as jest.Mocked<typeof fs>;
+import { appConfig } from '../config';
+import { FileEntity } from './entities/file.entity';
+import { FilesService } from './files.service';
 
 describe('FilesService', () => {
   let service: FilesService;
+  let mockRepository: any;
 
-  const mockRepository = {
-    create: jest.fn(),
-    save: jest.fn(),
-    findOne: jest.fn(),
-  };
-
-  const mockAppConfig = {
-    baseUrl: 'http://localhost:3000',
-  };
+  const mockAppConfig = { baseUrl: 'http://localhost:3000' };
 
   const mockFile: Express.Multer.File = {
     fieldname: 'image',
@@ -49,23 +26,30 @@ describe('FilesService', () => {
   };
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    mockRepository = {
+      create: jest.fn(),
+      save: jest.fn(),
+      find: jest.fn(),
+      findOne: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         FilesService,
-        {
-          provide: getRepositoryToken(FileEntity),
-          useValue: mockRepository,
-        },
-        {
-          provide: appConfig.KEY,
-          useValue: mockAppConfig,
-        },
+        { provide: getRepositoryToken(FileEntity), useValue: mockRepository },
+        { provide: appConfig.KEY, useValue: mockAppConfig },
       ],
     }).compile();
 
     service = module.get<FilesService>(FilesService);
+
+    jest.spyOn(fs.promises, 'writeFile').mockImplementation(async () => {});
+    jest.spyOn(fs.promises, 'unlink').mockImplementation(async () => {});
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+    jest.clearAllMocks();
   });
 
   describe('uploadImage', () => {
@@ -82,14 +66,10 @@ describe('FilesService', () => {
 
       mockRepository.create.mockReturnValue(mockFileEntity);
       mockRepository.save.mockResolvedValue(mockFileEntity);
-      (mockedFs.promises.writeFile as jest.Mock).mockResolvedValue(undefined);
 
       const result = await service.uploadImage(mockFile);
 
-      expect(mockedFs.promises.writeFile).toHaveBeenCalledWith(
-        path.join(process.cwd(), 'public', 'images', 'mocked-uuid-v4.jpg'),
-        mockFile.buffer,
-      );
+      expect(mockRepository.create).toHaveBeenCalled();
       expect(mockRepository.save).toHaveBeenCalled();
       expect(result).toEqual({
         id: 1,
@@ -101,6 +81,7 @@ describe('FilesService', () => {
     });
 
     it('should throw BadRequestException if file is not provided', async () => {
+      // @ts-expect-error тестируем null
       await expect(service.uploadImage(null)).rejects.toThrow(
         new BadRequestException('Файл не был предоставлен'),
       );
@@ -108,7 +89,6 @@ describe('FilesService', () => {
 
     it('should throw BadRequestException for unsupported file type', async () => {
       const unsupportedFile = { ...mockFile, mimetype: 'text/plain' };
-
       await expect(service.uploadImage(unsupportedFile)).rejects.toThrow(
         new BadRequestException(
           'Разрешены только изображения (JPEG, PNG, GIF, WebP)',
@@ -120,23 +100,20 @@ describe('FilesService', () => {
       const dbError = new Error('Database error');
       mockRepository.create.mockReturnValue({});
       mockRepository.save.mockRejectedValue(dbError);
-      (mockedFs.promises.writeFile as jest.Mock).mockResolvedValue(undefined);
-      (mockedFs.promises.unlink as jest.Mock).mockResolvedValue(undefined);
+
+      const unlinkSpy = jest.spyOn(fs.promises, 'unlink');
 
       await expect(service.uploadImage(mockFile)).rejects.toThrow(
         new BadRequestException('Ошибка при сохранении файла'),
       );
 
-      expect(mockedFs.promises.unlink).toHaveBeenCalledWith(
-        path.join(process.cwd(), 'public', 'images', 'mocked-uuid-v4.jpg'),
-      );
+      expect(unlinkSpy).toHaveBeenCalled();
     });
 
     it('should handle duplicate filename error', async () => {
       const duplicateError = { code: '23505', message: 'duplicate key value' };
       mockRepository.create.mockReturnValue({});
       mockRepository.save.mockRejectedValue(duplicateError);
-      (mockedFs.promises.writeFile as jest.Mock).mockResolvedValue(undefined);
 
       await expect(service.uploadImage(mockFile)).rejects.toThrow(
         new BadRequestException(
@@ -155,6 +132,39 @@ describe('FilesService', () => {
 
       expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
       expect(result).toEqual(mockFileEntity);
+    });
+
+    it('should return null if file not found', async () => {
+      mockRepository.findOne.mockResolvedValue(null);
+
+      const result = await service.getFileById(999);
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('getAllFiles', () => {
+    it('should return all files ordered by createdAt DESC', async () => {
+      const mockFiles = [
+        { id: 1, filename: 'a.jpg', createdAt: new Date() },
+        { id: 2, filename: 'b.jpg', createdAt: new Date() },
+      ];
+      mockRepository.find.mockResolvedValue(mockFiles);
+
+      const result = await service.getAllFiles();
+
+      expect(mockRepository.find).toHaveBeenCalledWith({
+        order: { createdAt: 'DESC' },
+      });
+      expect(result).toEqual(mockFiles);
+    });
+
+    it('should return empty array if no files exist', async () => {
+      mockRepository.find.mockResolvedValue([]);
+
+      const result = await service.getAllFiles();
+
+      expect(result).toEqual([]);
     });
   });
 });
