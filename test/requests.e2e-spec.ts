@@ -334,18 +334,18 @@ describe('RequestsController (e2e)', () => {
                   email: 'admin@example.com',
                   role: 'admin',
                 };
-                  } else if (token === 'sender-token') {
-                    request.user = {
-                      userId: 'sender-user-id',
-                      email: MOCK_USERS.sender.email,
-                      role: 'user',
-                    };
-                  } else if (token === 'receiver-token') {
-                    request.user = {
-                      userId: 'receiver-user-id',
-                      email: MOCK_USERS.receiver.email,
-                      role: 'user',
-                    };
+              } else if (token === 'sender-token') {
+                request.user = {
+                  userId: 'sender-user-id',
+                  email: MOCK_USERS.sender.email,
+                  role: 'user',
+                };
+              } else if (token === 'receiver-token') {
+                request.user = {
+                  userId: 'receiver-user-id',
+                  email: MOCK_USERS.receiver.email,
+                  role: 'user',
+                };
               } else {
                 request.user = {
                   userId: 'mock-user-id',
