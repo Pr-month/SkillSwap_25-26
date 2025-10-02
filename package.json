@@ -19,7 +19,10 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "seed:categories": "ts-node src/scripts/categories.seed.ts",
-    "seed:admin": "ts-node src/scripts/users.seed.ts",
+    "seed:admin": "ts-node src/scripts/admin.seed.ts",
+    "seed:test:users": "ts-node src/scripts/users.seed.ts",
+    "seed:test:skills": "ts-node src/scripts/skills.seed.ts",
+    "seed:test:requests": "ts-node src/scripts/requests.seed.ts",
     "seed": "npm run seed:categories && npm run seed:admin"
   },
   "dependencies": {
