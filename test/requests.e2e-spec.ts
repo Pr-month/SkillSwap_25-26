@@ -86,10 +86,7 @@ class MockRequestsService {
   private requests: any[] = [];
   private requestIdCounter = 1;
 
-  async create(
-    createRequestDto: CreateRequestDto,
-    senderId: string,
-  ): Promise<any> {
+  create(createRequestDto: CreateRequestDto, senderId: string): Promise<any> {
     const { offeredSkillId, requestedSkillId } = createRequestDto;
 
     // Проверяем, что пользователь не отправляет заявку самому себе
@@ -140,26 +137,30 @@ class MockRequestsService {
     };
 
     this.requests.push(newRequest);
-    return newRequest;
+    return Promise.resolve(newRequest);
   }
 
-  async getIncomingRequests(userId: string): Promise<any[]> {
-    return this.requests.filter(
-      (req) =>
-        req.receiver.id === userId && req.status === RequestStatus.PENDING,
+  getIncomingRequests(userId: string): Promise<any[]> {
+    return Promise.resolve(
+      this.requests.filter(
+        (req) =>
+          req.receiver.id === userId && req.status === RequestStatus.PENDING,
+      ),
     );
   }
 
-  async getOutgoingRequests(userId: string): Promise<any[]> {
-    return this.requests.filter(
-      (req) =>
-        req.sender.id === userId &&
-        (req.status === RequestStatus.PENDING ||
-          req.status === RequestStatus.IN_PROGRESS),
+  getOutgoingRequests(userId: string): Promise<any[]> {
+    return Promise.resolve(
+      this.requests.filter(
+        (req) =>
+          req.sender.id === userId &&
+          (req.status === RequestStatus.PENDING ||
+            req.status === RequestStatus.IN_PROGRESS),
+      ),
     );
   }
 
-  async remove(
+  remove(
     id: string,
     userId: string,
     userRole: string,
@@ -182,10 +183,10 @@ class MockRequestsService {
     }
 
     this.requests.splice(requestIndex, 1);
-    return { message: 'Заявка успешно удалена' };
+    return Promise.resolve({ message: 'Заявка успешно удалена' });
   }
 
-  async update(
+  update(
     id: string,
     updateRequestDto: UpdateRequestDto,
     userId: string,
@@ -220,7 +221,7 @@ class MockRequestsService {
       this.requests[requestIndex].status = updateRequestDto.status;
     }
 
-    return { message: 'Заявка успешно обновлена' };
+    return Promise.resolve({ message: 'Заявка успешно обновлена' });
   }
 
   // Методы для тестирования
