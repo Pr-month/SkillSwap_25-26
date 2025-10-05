@@ -6,7 +6,7 @@ import {
   IsEnum,
   IsOptional,
   IsDateString,
-  IsArray
+  IsArray,
 } from 'class-validator';
 import { Gender } from '../../users/enums';
 
