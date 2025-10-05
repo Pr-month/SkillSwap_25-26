@@ -9,7 +9,7 @@ export class AuthTestController {
   constructor(private configService: ConfigService) {}
 
   @Get('config')
-  async testConfig(@Res() res: Response) {
+  testConfig(@Res() res: Response) {
     const yandexConfig =
       this.configService.get<IYandexOAuthConfig>('YANDEX_OAUTH');
 
@@ -44,7 +44,7 @@ export class AuthTestController {
   }
 
   @Get('yandex-url')
-  async getYandexAuthUrl(@Res() res: Response) {
+  getYandexAuthUrl(@Res() res: Response) {
     const yandexConfig =
       this.configService.get<IYandexOAuthConfig>('YANDEX_OAUTH');
 
@@ -80,7 +80,7 @@ export class AuthTestController {
 
   @Get('yandex/callback')
   @UseGuards(YandexAuthGuard)
-  async yandexCallback(@Res() res: Response) {
+  yandexCallback(@Res() res: Response) {
     // После успешной авторизации через Яндекс
     // В реальном приложении здесь бы генерировались токены
     return res.json({

@@ -20,4 +20,4 @@ async function bootstrap() {
   console.log(`   - GET http://localhost:${port}/auth/yandex/login`);
 }
 
-bootstrap();
+void bootstrap();

@@ -29,12 +29,12 @@ export class YandexTestStrategy extends PassportStrategy(Strategy, 'yandex') {
     });
   }
 
-  async validate(
+  validate(
     accessToken: string,
     refreshToken: string,
     profile: YandexProfile,
     done: (error: any, user?: any) => void,
-  ): Promise<any> {
+  ): void {
     try {
       // Логируем профиль для отладки
       console.log('Yandex Profile:', profile);
