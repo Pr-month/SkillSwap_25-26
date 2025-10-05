@@ -56,13 +56,17 @@ describe('CategoriesService', () => {
   describe('update', () => {
     it('бросает NotFound, если категории нет', async () => {
       (repo.findOne as jest.Mock).mockResolvedValueOnce(null);
-      await expect(service.update('id1', {} as any)).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.update('id1', {} as any)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
 
     it('обновляет имя', async () => {
       const category: any = { id: 'id1', name: 'Old', parent: null };
       (repo.findOne as jest.Mock).mockResolvedValueOnce(category);
-      (repo.save as jest.Mock).mockImplementation(async (c: any) => c);
+      (repo.save as jest.Mock).mockImplementation((c: any) =>
+        Promise.resolve(c),
+      );
       const res = await service.update('id1', { name: 'New' });
       expect(res.name).toBe('New');
       expect(repo.save).toHaveBeenCalledWith(category);
@@ -71,14 +75,17 @@ describe('CategoriesService', () => {
     it('бросает BadRequest если parentId равен id категории', async () => {
       const category: any = { id: 'id1', name: 'Old', parent: null };
       (repo.findOne as jest.Mock).mockResolvedValueOnce(category);
-      await expect(service.update('id1', { parentId: 'id1' }))
-        .rejects.toBeInstanceOf(BadRequestException);
+      await expect(
+        service.update('id1', { parentId: 'id1' }),
+      ).rejects.toBeInstanceOf(BadRequestException);
     });
 
     it('сбрасывает parent при parentId = null', async () => {
       const category: any = { id: 'id1', name: 'Old', parent: { id: 'p1' } };
       (repo.findOne as jest.Mock).mockResolvedValueOnce(category);
-      (repo.save as jest.Mock).mockImplementation(async (c: any) => c);
+      (repo.save as jest.Mock).mockImplementation((c: any) =>
+        Promise.resolve(c),
+      );
       const res = await service.update('id1', { parentId: null });
       expect(res.parent).toBeNull();
     });
@@ -90,7 +97,9 @@ describe('CategoriesService', () => {
       (repo.findOne as jest.Mock)
         .mockResolvedValueOnce(category)
         .mockResolvedValueOnce(parent);
-      (repo.save as jest.Mock).mockImplementation(async (c: any) => c);
+      (repo.save as jest.Mock).mockImplementation((c: any) =>
+        Promise.resolve(c),
+      );
 
       const res = await service.update('id1', { parentId: 'p1' });
       expect(res.parent).toBe(parent);
@@ -102,15 +111,18 @@ describe('CategoriesService', () => {
       (repo.findOne as jest.Mock)
         .mockResolvedValueOnce(category)
         .mockResolvedValueOnce(null);
-      await expect(service.update('id1', { parentId: 'missing' }))
-        .rejects.toBeInstanceOf(BadRequestException);
+      await expect(
+        service.update('id1', { parentId: 'missing' }),
+      ).rejects.toBeInstanceOf(BadRequestException);
     });
   });
 
   describe('removeByID', () => {
     it('бросает NotFound если нет категории', async () => {
       (repo.findOne as jest.Mock).mockResolvedValueOnce(null);
-      await expect(service.removeByID('id1')).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.removeByID('id1')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
 
     it('удаляет существующую категорию', async () => {
@@ -135,8 +147,9 @@ describe('CategoriesService', () => {
 
     it('бросает NotFound если parentId указан и не найден', async () => {
       (repo.findOne as jest.Mock).mockResolvedValueOnce(null);
-      await expect(service.create({ name: 'A', parentId: 'p1' } as any))
-        .rejects.toBeInstanceOf(NotFoundException);
+      await expect(
+        service.create({ name: 'A', parentId: 'p1' } as any),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
 
     it('создаёт с родителем', async () => {
@@ -151,5 +164,3 @@ describe('CategoriesService', () => {
     });
   });
 });
-
-

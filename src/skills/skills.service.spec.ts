@@ -1,7 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
+import {
+  NotFoundException,
+  ForbiddenException,
+  ConflictException,
+} from '@nestjs/common';
 import { Repository } from 'typeorm';
+import * as fs from 'fs';
 import { SkillsService } from './skills.service';
 import { Skill } from './entities/skill.entity';
 import { User } from 'src/users/entities/user.entity';
@@ -27,8 +32,8 @@ describe('SkillsService', () => {
   let userRepo: MockRepo;
   let categoryRepo: MockRepo;
 
-  const fsExistsSyncSpy = jest.spyOn(require('fs'), 'existsSync');
-  const fsUnlinkSyncSpy = jest.spyOn(require('fs'), 'unlinkSync');
+  const fsExistsSyncSpy = jest.spyOn(fs, 'existsSync');
+  const fsUnlinkSyncSpy = jest.spyOn(fs, 'unlinkSync');
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -55,7 +60,12 @@ describe('SkillsService', () => {
 
   describe('create', () => {
     it('успешно создаёт навык', async () => {
-      const dto: any = { title: 't', description: 'd', categoryId: 'cat1', images: [] };
+      const dto: any = {
+        title: 't',
+        description: 'd',
+        categoryId: 'cat1',
+        images: [],
+      };
       const category = { id: 'cat1' } as Category;
       const owner = { id: 'user1' } as User;
       const created = { id: 'skill1', ...dto, category, owner } as Skill;
@@ -68,22 +78,28 @@ describe('SkillsService', () => {
       const result = await service.create(dto, 'user1');
       expect(categoryRepo.findOneBy).toHaveBeenCalledWith({ id: 'cat1' });
       expect(userRepo.findOneBy).toHaveBeenCalledWith({ id: 'user1' });
-      expect(skillRepo.create).toHaveBeenCalledWith({ ...dto, category, owner });
+      expect(skillRepo.create).toHaveBeenCalledWith({
+        ...dto,
+        category,
+        owner,
+      });
       expect(skillRepo.save).toHaveBeenCalledWith(created);
       expect(result).toEqual(created);
     });
 
     it('бросает NotFound, если категория не найдена', async () => {
       categoryRepo.findOneBy!.mockResolvedValue(null);
-      await expect(service.create({ categoryId: 'x' } as any, 'u'))
-        .rejects.toBeInstanceOf(NotFoundException);
+      await expect(
+        service.create({ categoryId: 'x' } as any, 'u'),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
 
     it('бросает NotFound, если пользователь не найден', async () => {
       categoryRepo.findOneBy!.mockResolvedValue({ id: 'cat' });
       userRepo.findOneBy!.mockResolvedValue(null);
-      await expect(service.create({ categoryId: 'x' } as any, 'u'))
-        .rejects.toBeInstanceOf(NotFoundException);
+      await expect(
+        service.create({ categoryId: 'x' } as any, 'u'),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
   });
 
@@ -92,7 +108,10 @@ describe('SkillsService', () => {
       const skill = { id: 's1' } as Skill;
       skillRepo.findOneOrFail!.mockResolvedValue(skill);
       const result = await service.findOne('s1');
-      expect(skillRepo.findOneOrFail).toHaveBeenCalledWith({ where: { id: 's1' }, relations: ['owner'] });
+      expect(skillRepo.findOneOrFail).toHaveBeenCalledWith({
+        where: { id: 's1' },
+        relations: ['owner'],
+      });
       expect(result).toBe(skill);
     });
   });
@@ -101,7 +120,7 @@ describe('SkillsService', () => {
     it('обновляет существующий навык', async () => {
       const skill = { id: 's1', title: 'old' } as any;
       skillRepo.findOneBy!.mockResolvedValue(skill);
-      skillRepo.save!.mockImplementation(async (s) => s);
+      skillRepo.save!.mockImplementation((s) => Promise.resolve(s));
       const result = await service.update('s1', { title: 'new' } as any);
       expect(skillRepo.findOneBy).toHaveBeenCalledWith({ id: 's1' });
       expect(result.title).toBe('new');
@@ -110,7 +129,9 @@ describe('SkillsService', () => {
 
     it('бросает NotFound, если навык не найден', async () => {
       skillRepo.findOneBy!.mockResolvedValue(null);
-      await expect(service.update('s1', {} as any)).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.update('s1', {} as any)).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
   });
 
@@ -118,11 +139,17 @@ describe('SkillsService', () => {
     it('бросает Forbidden, если пользователь не владелец', async () => {
       const skill = { id: 's1', owner: { id: 'other' }, images: [] } as any;
       jest.spyOn(service, 'findOne').mockResolvedValue(skill);
-      await expect(service.remove('s1', 'user1')).rejects.toBeInstanceOf(ForbiddenException);
+      await expect(service.remove('s1', 'user1')).rejects.toBeInstanceOf(
+        ForbiddenException,
+      );
     });
 
     it('удаляет навык и изображения владельца', async () => {
-      const skill = { id: 's1', owner: { id: 'user1' }, images: ['a.jpg', 'b.jpg'] } as any;
+      const skill = {
+        id: 's1',
+        owner: { id: 'user1' },
+        images: ['a.jpg', 'b.jpg'],
+      } as any;
       jest.spyOn(service, 'findOne').mockResolvedValue(skill);
       fsExistsSyncSpy.mockReturnValue(true);
       fsUnlinkSyncSpy.mockImplementation(() => undefined);
@@ -138,26 +165,37 @@ describe('SkillsService', () => {
       const skill = { id: 's1', owner: { id: 'user1' }, images: [] } as any;
       jest.spyOn(service, 'findOne').mockResolvedValue(skill);
       skillRepo.delete!.mockResolvedValue({ affected: 0 } as any);
-      await expect(service.remove('s1', 'user1')).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.remove('s1', 'user1')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
   });
 
   describe('favorites', () => {
     it('addToFavorites — бросает NotFound, если навык не найден', async () => {
       skillRepo.findOne!.mockResolvedValue(null);
-      await expect(service.addToFavorites('s1', 'u1')).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.addToFavorites('s1', 'u1')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
 
     it('addToFavorites — бросает NotFound, если пользователь не найден', async () => {
       skillRepo.findOne!.mockResolvedValue({ id: 's1' });
       userRepo.findOne!.mockResolvedValue(null);
-      await expect(service.addToFavorites('s1', 'u1')).rejects.toBeInstanceOf(NotFoundException);
+      await expect(service.addToFavorites('s1', 'u1')).rejects.toBeInstanceOf(
+        NotFoundException,
+      );
     });
 
     it('addToFavorites — бросает Conflict, если уже в избранном', async () => {
       skillRepo.findOne!.mockResolvedValue({ id: 's1' });
-      userRepo.findOne!.mockResolvedValue({ id: 'u1', favoriteSkills: [{ id: 's1' }] });
-      await expect(service.addToFavorites('s1', 'u1')).rejects.toBeInstanceOf(ConflictException);
+      userRepo.findOne!.mockResolvedValue({
+        id: 'u1',
+        favoriteSkills: [{ id: 's1' }],
+      });
+      await expect(service.addToFavorites('s1', 'u1')).rejects.toBeInstanceOf(
+        ConflictException,
+      );
     });
 
     it('addToFavorites — добавляет и сохраняет', async () => {
@@ -175,11 +213,16 @@ describe('SkillsService', () => {
 
     it('removeFromFavorites — бросает NotFound, если пользователь не найден', async () => {
       userRepo.findOne!.mockResolvedValue(null);
-      await expect(service.removeFromFavorites('s1', 'u1')).rejects.toBeInstanceOf(NotFoundException);
+      await expect(
+        service.removeFromFavorites('s1', 'u1'),
+      ).rejects.toBeInstanceOf(NotFoundException);
     });
 
     it('removeFromFavorites — фильтрует и сохраняет', async () => {
-      const user: any = { id: 'u1', favoriteSkills: [{ id: 's1' }, { id: 's2' }] };
+      const user: any = {
+        id: 'u1',
+        favoriteSkills: [{ id: 's1' }, { id: 's2' }],
+      };
       userRepo.findOne!.mockResolvedValue(user);
       userRepo.save!.mockResolvedValue(undefined);
       await service.removeFromFavorites('s1', 'u1');
@@ -201,7 +244,12 @@ describe('SkillsService', () => {
 
       skillRepo.createQueryBuilder!.mockReturnValue(qb);
 
-      const result = await service.getSkills({ page: 1, limit: 10, search: 'dev', category: 'it' } as any);
+      const result = await service.getSkills({
+        page: 1,
+        limit: 10,
+        search: 'dev',
+        category: 'it',
+      } as any);
       expect(skillRepo.createQueryBuilder).toHaveBeenCalledWith('skill');
       expect(qb.leftJoinAndSelect).toHaveBeenCalledTimes(2);
       expect(qb.getManyAndCount).toHaveBeenCalled();

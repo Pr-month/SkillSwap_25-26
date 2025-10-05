@@ -26,7 +26,10 @@ export class SkillsService {
     private categoryRepository: Repository<Category>,
   ) {}
 
-  async create(createSkillDto: CreateSkillDto, ownerId: string): Promise<Skill> {
+  async create(
+    createSkillDto: CreateSkillDto,
+    ownerId: string,
+  ): Promise<Skill> {
     // Сначала находим категорию по ID
     const category = await this.categoryRepository.findOneBy({
       id: createSkillDto.categoryId,
