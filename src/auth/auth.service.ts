@@ -9,6 +9,7 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ConfigService } from '@nestjs/config';
+import { Gender } from '../users/enums';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -94,7 +95,7 @@ export class AuthService {
     return this.generateTokens(tokenEntity.user.id);
   }
 
-  private async generateTokens(userId: string): Promise<TokensDto> {
+  async generateTokens(userId: string): Promise<TokensDto> {
     const user = await this.usersService.findOne(userId);
     const accessTokenExpiresIn = this.configService.get<string>(
       'JWT_ACCESS_EXPIRES_IN',
@@ -141,6 +142,44 @@ export class AuthService {
     });
 
     return { accessToken, refreshToken };
+  }
+
+  async validateYandexUser(yandexUserData: {
+    email: string;
+    name: string;
+    avatar?: string;
+  }) {
+    // Проверяем, существует ли пользователь с таким email
+    let user = await this.usersService.findByEmail(yandexUserData.email);
+
+    if (user) {
+      // Если пользователь существует, обновляем его аватар если нужно
+      if (yandexUserData.avatar && user.avatar !== yandexUserData.avatar) {
+        await this.usersService.update(user.id, {
+          avatar: yandexUserData.avatar,
+        });
+        user.avatar = yandexUserData.avatar;
+      }
+      return user;
+    }
+
+    // Если пользователь не существует, создаем нового
+    // Генерируем случайный пароль для OAuth пользователей
+    const randomPassword = Math.random().toString(36).slice(-8);
+    const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+    user = await this.usersService.create({
+      email: yandexUserData.email,
+      name: yandexUserData.name,
+      password: hashedPassword,
+      about: 'Пользователь авторизован через Яндекс', // Значение по умолчанию
+      city: 'Не указан', // Значение по умолчанию
+      gender: Gender.MALE, // Значение по умолчанию, пользователь сможет изменить
+      birthdate: new Date('1990-01-01'), // Значение по умолчанию
+      avatar: yandexUserData.avatar || '',
+    });
+
+    return user;
   }
 
   async logoutUser(userId: string) {
