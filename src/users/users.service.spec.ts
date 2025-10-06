@@ -59,8 +59,8 @@ describe('UsersService', () => {
   const mockSkillsRepository = {
     create: jest.fn(),
     findOneOrFail: jest.fn(),
-    fondOneBy: jest.fn()
-  }
+    fondOneBy: jest.fn(),
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -76,8 +76,8 @@ describe('UsersService', () => {
         },
         {
           provide: getRepositoryToken(Skill),
-          useValue: mockSkillsRepository
-        }
+          useValue: mockSkillsRepository,
+        },
       ],
     }).compile();
 
