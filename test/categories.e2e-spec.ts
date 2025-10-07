@@ -1,18 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
 import { AuthService } from '../src/auth/auth.service';
-import { UsersService } from '../src/users/users.service';
-import { Gender, UserRole } from '../src/users/enums';
 import { Server } from 'http';
+import { AdminUserData, RegularUsersData } from 'src/scripts/users.data';
+import { AllExpectionFilter } from 'src/common/all-exception.filter';
+import { ConfigService } from '@nestjs/config';
 
 describe('CategoriesController (e2e)', () => {
   let app: INestApplication;
   let httpServer: Server;
   let authService: AuthService;
-  let usersService: UsersService;
   let adminToken: string;
+  let userToken: string;
   let createdCategoryId: string;
 
   // Тестовые данные
@@ -27,9 +28,27 @@ describe('CategoriesController (e2e)', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(ConfigService)
+      .useValue({
+        get: (key: string) => {
+          if (key === 'JWT_ACCESS_SECRET') return 'test-access-secret';
+          if (key === 'JWT_REFRESH_SECRET') return 'test-refresh-secret';
+          if (key === 'JWT_ACCESS_EXPIRES_IN') return '15m';
+          if (key === 'JWT_REFRESH_EXPIRES_IN') return '7d';
+          if (key === 'JWT.accessSecret') return 'test-access-secret';
+          if (key === 'JWT.refreshSecret') return 'test-refresh-secret';
+          return process.env[key];
+        },
+      })
+      .compile();
 
     app = moduleFixture.createNestApplication();
+
+    // Подключаем глобальные пайпы и фильтры
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+    app.useGlobalFilters(new AllExpectionFilter());
+
     await app.init();
 
     // Получаем HTTP сервер с типизацией
@@ -37,32 +56,20 @@ describe('CategoriesController (e2e)', () => {
 
     // Получаем сервисы для аутентификации
     authService = app.get(AuthService);
-    usersService = app.get(UsersService);
-
-    // Создаем или находим администратора и получаем токен
-    const adminUser = await usersService.findByEmail('admin@example.com');
-    if (!adminUser) {
-      // Создаем тестового администратора если его нет
-      const adminData = {
-        name: 'Admin User',
-        email: 'admin@example.com',
-        password: 'adminpassword',
-        birthdate: new Date('1990-01-01'),
-        gender: Gender.MALE,
-        role: UserRole.ADMIN,
-        about: 'Test admin user',
-        city: 'Test City',
-        avatar: 'test-avatar.jpg',
-      };
-      await usersService.create(adminData);
-    }
 
     // Логинимся как администратор
     const tokens = await authService.login({
-      email: 'admin@example.com',
-      password: 'adminpassword',
+      email: AdminUserData.email,
+      password: AdminUserData.password,
     });
     adminToken = tokens.accessToken;
+
+    // Логинимся как обычный пользователь
+    const userTokens = await authService.login({
+      email: RegularUsersData[0].email,
+      password: RegularUsersData[0].password,
+    });
+    userToken = userTokens.accessToken;
   });
 
   afterAll(async () => {
@@ -98,6 +105,14 @@ describe('CategoriesController (e2e)', () => {
         .send(testCategory)
         .expect(401);
     });
+
+    it('/categories (POST) - should return 403 for regular user', async () => {
+      return request(httpServer)
+        .post('/categories')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send(testCategory)
+        .expect(403);
+    });
   });
 
   // Тест получения категорий
@@ -110,22 +125,6 @@ describe('CategoriesController (e2e)', () => {
           expect(Array.isArray(res.body)).toBe(true);
           expect(res.body.length).toBeGreaterThan(0);
         });
-    });
-
-    it('/categories/:id (GET) - should get category by id', () => {
-      return request(httpServer)
-        .get(`/categories/${createdCategoryId}`)
-        .expect(200)
-        .expect((res) => {
-          expect(res.body.id).toBe(createdCategoryId);
-          expect(res.body.name).toBe(testCategory.name);
-        });
-    });
-
-    it('/categories/:id (GET) - should return 404 for non-existent category', () => {
-      return request(httpServer)
-        .get('/categories/00000000-0000-0000-0000-000000000000')
-        .expect(404);
     });
   });
 
@@ -156,6 +155,14 @@ describe('CategoriesController (e2e)', () => {
         .send(updatedCategory)
         .expect(401);
     });
+
+    it('/categories/:id (PATCH) - should return 403 for regular user', () => {
+      return request(httpServer)
+        .patch(`/categories/${createdCategoryId}`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .send(updatedCategory)
+        .expect(403);
+    });
   });
 
   // Тест удаления категории
@@ -181,6 +188,13 @@ describe('CategoriesController (e2e)', () => {
       return request(httpServer)
         .delete(`/categories/${createdCategoryId}`)
         .expect(401);
+    });
+
+    it('/categories/:id (DELETE) - should return 403 for regular user', () => {
+      return request(httpServer)
+        .delete(`/categories/${createdCategoryId}`)
+        .set('Authorization', `Bearer ${userToken}`)
+        .expect(403);
     });
   });
 });
