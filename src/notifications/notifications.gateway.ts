@@ -2,14 +2,13 @@ import {
   WebSocketGateway,
   WebSocketServer,
   SubscribeMessage,
-  MessageBody,
   ConnectedSocket,
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Notification } from './entities/notification.entity';
-import { JwtWsGuard } from './guards/ws-jwt.guard';
+import { JwtWsGuard, SocketWithUser } from './guards/ws-jwt.guard';
 
 export interface NotificationPayload {
   type: 'new' | 'accepted' | 'rejected';
@@ -58,13 +57,20 @@ export class NotificationsGateway
   }
 
   @SubscribeMessage('leave')
-  handleLeave(
-    @MessageBody() data: { userId: string },
-    @ConnectedSocket() client: Socket,
-  ) {
-    this.userConnections.delete(data.userId);
-    void client.leave(`user_${data.userId}`);
-    console.log(`User ${data.userId} left notifications room`);
+  handleLeave(@ConnectedSocket() client: Socket) {
+    // Получаем userId из авторизованных данных клиента
+    const userId = (client as SocketWithUser).data?.user?.userId;
+
+    if (!userId) {
+      console.log(
+        `Client ${client.id} attempted to leave without proper authentication`,
+      );
+      return;
+    }
+
+    this.userConnections.delete(userId);
+    void client.leave(`user_${userId}`);
+    console.log(`User ${userId} left notifications room`);
   }
 
   // Метод для отправки уведомления конкретному пользователю (в комнату user_<id>)
