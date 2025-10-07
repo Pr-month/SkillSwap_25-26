@@ -3,7 +3,12 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import * as dotenv from 'dotenv';
 
 // Загружаем переменные окружения для скриптов
-dotenv.config();
+// При тестовой среде загружаем .env.test.local
+if (process.env.NODE_ENV === 'test') {
+  dotenv.config({ path: '.env.test.local' });
+} else {
+  dotenv.config();
+}
 
 export const databaseConfig = registerAs(
   'DATABASE',
