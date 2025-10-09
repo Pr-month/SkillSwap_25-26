@@ -3,12 +3,7 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import * as dotenv from 'dotenv';
 
 // Загружаем переменные окружения для скриптов
-// При тестовой среде загружаем .env.test.local
-if (process.env.NODE_ENV === 'test') {
-  dotenv.config({ path: '.env.test.local' });
-} else {
-  dotenv.config();
-}
+dotenv.config();
 
 export const databaseConfig = registerAs(
   'DATABASE',
@@ -21,6 +16,7 @@ export const databaseConfig = registerAs(
     database: process.env.DB_DATABASE || 'skillswap',
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
     synchronize: process.env.NODE_ENV !== 'production', // Отключаем в продакшене
+    dropSchema: process.env.NODE_ENV === 'test', // Очищаем схему при тестах
   }),
 );
 
