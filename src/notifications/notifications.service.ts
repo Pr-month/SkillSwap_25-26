@@ -21,13 +21,18 @@ export class NotificationsService {
   ): Promise<Notification> {
     const { userId, type, title, message, data } = createNotificationDto;
 
-    const user = await this.userRepository.findOne({ where: { id: userId } });
-    if (!user) {
+    // Проверяем существование пользователя без загрузки пароля
+    const userExists = await this.userRepository.findOne({
+      where: { id: userId },
+      select: ['id'],
+    });
+    if (!userExists) {
       throw new Error('Пользователь не найден');
     }
 
+    // Создаем уведомление с минимальной ссылкой на пользователя
     const notification = this.notificationRepository.create({
-      user,
+      user: { id: userId } as User,
       type,
       title,
       message,
@@ -47,6 +52,15 @@ export class NotificationsService {
   async findByUserId(userId: string, limit = 50): Promise<Notification[]> {
     return this.notificationRepository.find({
       where: { user: { id: userId } },
+      select: {
+        id: true,
+        type: true,
+        title: true,
+        message: true,
+        isRead: true,
+        data: true,
+        createdAt: true,
+      },
       order: { createdAt: 'DESC' },
       take: limit,
     });

@@ -29,6 +29,8 @@ import { NotificationsModule } from './notifications/notifications.module';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [appConfig, jwtConfig, databaseConfig, yandexOAuthConfig],
+      envFilePath: ['.env.test.local', '.env'],
+      ignoreEnvFile: false,
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
