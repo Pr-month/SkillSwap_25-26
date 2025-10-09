@@ -10,6 +10,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
 import { Gender, UserRole } from './enums';
+import { Skill } from 'src/skills/entities/skill.entity';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -55,6 +56,12 @@ describe('UsersService', () => {
     find: jest.fn(),
   };
 
+  const mockSkillsRepository = {
+    create: jest.fn(),
+    findOneOrFail: jest.fn(),
+    fondOneBy: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -66,6 +73,10 @@ describe('UsersService', () => {
         {
           provide: getRepositoryToken(Category),
           useValue: mockCategoriesRepository,
+        },
+        {
+          provide: getRepositoryToken(Skill),
+          useValue: mockSkillsRepository,
         },
       ],
     }).compile();

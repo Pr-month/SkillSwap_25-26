@@ -4,6 +4,9 @@ import * as request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 
+// Устанавливаем NODE_ENV=test для e2e тестов
+process.env.NODE_ENV = 'test';
+
 describe('AppController (e2e)', () => {
   let app: INestApplication<App>;
 

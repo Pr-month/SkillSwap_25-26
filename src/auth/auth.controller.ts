@@ -1,4 +1,12 @@
-import { Controller, Post, Body, Req, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Req,
+  UseGuards,
+  Get,
+  Res,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { TokensDto } from './dto/tokens.dto';
@@ -9,6 +17,8 @@ import {
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { YandexAuthGuard } from './guards/yandex-auth.guard';
+import { Response } from 'express';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -61,5 +71,26 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Не авторизован' })
   async logoutUser(@Req() req: AuthenticatedRequest) {
     return await this.authService.logoutUser(req.user.userId);
+  }
+
+  @Get('yandex/login')
+  @UseGuards(YandexAuthGuard)
+  async yandexLogin() {
+    // Этот эндпоинт инициирует OAuth flow
+    // Passport автоматически перенаправит на Яндекс
+  }
+
+  @Get('yandex/callback')
+  @UseGuards(YandexAuthGuard)
+  async yandexCallback(@Req() req: AuthenticatedRequest, @Res() res: Response) {
+    // После успешной авторизации через Яндекс
+    const user = req.user;
+    const tokens = await this.authService.generateTokens(user.userId);
+
+    // Перенаправляем на фронтенд с токенами в query параметрах
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
+    const redirectUrl = `${frontendUrl}/auth/callback?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`;
+
+    res.redirect(redirectUrl);
   }
 }

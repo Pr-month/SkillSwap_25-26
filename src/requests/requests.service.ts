@@ -13,6 +13,7 @@ import { CreateRequestDto } from './dto/create-request.dto';
 import { UpdateRequestDto } from './dto/update-request.dto';
 import { RequestStatus } from '../users/enums';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class RequestsService {
@@ -24,6 +25,7 @@ export class RequestsService {
     @InjectRepository(Skill)
     private skillRepository: Repository<Skill>,
     private readonly notificationsGateway: NotificationsGateway,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async create(
@@ -97,12 +99,20 @@ export class RequestsService {
       throw new NotFoundException('Ошибка при создании заявки');
     }
 
-    // Отправляем уведомление получателю о новой заявке
+    // Отправляем уведомление получателю о новой заявке (WebSocket)
     this.notificationsGateway.notifyNewRequest(receiver.id, {
       fromUserId: senderId,
       skillTitle: requestedSkill.title,
       message: `Поступила новая заявка от пользователя ${senderId}`,
     });
+
+    // Также создаем запись в notifications (персистентное уведомление)
+    await this.notificationsService.createRequestNotification(
+      receiver.id,
+      offeredSkill.owner.name,
+      requestedSkill.title,
+      savedRequest.id,
+    );
 
     return result;
   }

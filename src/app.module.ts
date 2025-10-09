@@ -14,7 +14,12 @@ import {
   requestLoggerOptions,
 } from './logger/request-logger.middleware';
 import { FilesModule } from './files/files.module';
-import { appConfig, jwtConfig, databaseConfig } from './config';
+import {
+  appConfig,
+  jwtConfig,
+  databaseConfig,
+  yandexOAuthConfig,
+} from './config';
 import type { IJwtConfig, IDatabaseConfig } from './config';
 import { RequestsModule } from './requests/requests.module';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -23,7 +28,9 @@ import { NotificationsModule } from './notifications/notifications.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [appConfig, jwtConfig, databaseConfig],
+      load: [appConfig, jwtConfig, databaseConfig, yandexOAuthConfig],
+      envFilePath: ['.env.test.local', '.env'],
+      ignoreEnvFile: false,
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
