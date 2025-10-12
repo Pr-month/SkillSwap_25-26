@@ -14,7 +14,6 @@ import { PaginatedUsersResponseDto } from './dto/paginated-users-response.dto';
 import { Category } from '../categories/entities/categories.entity';
 import { Skill } from '../skills/entities/skill.entity';
 
-
 @Injectable()
 export class UsersService {
   constructor(

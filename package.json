@@ -10,17 +10,24 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
+    "start:test": "nest start --watch --entryFile main-test",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
+    "schema:drop": "npm run typeorm schema:drop -- -d src/config/database.config.ts",
+    "test:reset": "cross-env NODE_ENV=test npm run schema:drop",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:e2e": "cross-env NODE_ENV=test npm run test:reset && cross-env NODE_ENV=test npm run seed && cross-env NODE_ENV=test jest --config ./test/jest-e2e.json",
     "seed:categories": "ts-node src/scripts/categories.seed.ts",
-    "seed:admin": "ts-node src/scripts/users.seed.ts",
-    "seed": "npm run seed:categories && npm run seed:admin"
+    "seed:admin": "ts-node src/scripts/admin.seed.ts",
+    "seed:test:users": "ts-node src/scripts/users.seed.ts",
+    "seed:test:skills": "ts-node src/scripts/skills.seed.ts",
+    "seed:test:requests": "ts-node src/scripts/requests.seed.ts",
+    "seed": "npm run seed:categories && npm run seed:admin && npm run seed:test:users && npm run seed:test:skills && npm run seed:test:requests"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.6",
@@ -42,6 +49,7 @@
     "nest-winston": "^1.10.2",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
+    "passport-yandex": "^0.0.5",
     "pg": "^8.16.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
@@ -66,6 +74,7 @@
     "@types/passport-jwt": "^4.0.1",
     "@types/supertest": "^6.0.2",
     "@types/uuid": "^10.0.0",
+    "cross-env": "^10.1.0",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
@@ -91,6 +100,9 @@
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "moduleNameMapper": {
+      "^src/(.*)$": "<rootDir>/$1"
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s"

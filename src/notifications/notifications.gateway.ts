@@ -2,13 +2,20 @@ import {
   WebSocketGateway,
   WebSocketServer,
   SubscribeMessage,
-  MessageBody,
   ConnectedSocket,
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Notification } from './entities/notification.entity';
+import { JwtWsGuard, SocketWithUser } from './guards/ws-jwt.guard';
+
+export interface NotificationPayload {
+  type: 'new' | 'accepted' | 'rejected';
+  skillTitle: string;
+  fromUserId: string;
+  message?: string;
+}
 
 @WebSocketGateway({
   cors: {
@@ -23,8 +30,19 @@ export class NotificationsGateway
 
   private userConnections = new Map<string, Socket>();
 
-  handleConnection(client: Socket) {
-    console.log(`Client connected: ${client.id}`);
+  constructor(private readonly jwtWsGuard: JwtWsGuard) {}
+
+  async handleConnection(client: Socket) {
+    try {
+      const authedClient = await this.jwtWsGuard.verify(client);
+      const userId = authedClient.data.user.userId;
+      this.userConnections.set(userId, authedClient);
+      void authedClient.join(`user_${userId}`);
+      console.log(`Client connected: ${client.id} as user ${userId}`);
+    } catch {
+      // Если авторизация не прошла — отключаем клиента
+      client.disconnect(true);
+    }
   }
 
   handleDisconnect(client: Socket) {
@@ -38,28 +56,48 @@ export class NotificationsGateway
     }
   }
 
-  @SubscribeMessage('join')
-  handleJoin(
-    @MessageBody() data: { userId: string },
-    @ConnectedSocket() client: Socket,
-  ) {
-    // Сохраняем соединение пользователя
-    this.userConnections.set(data.userId, client);
-    client.join(`user_${data.userId}`);
-    console.log(`User ${data.userId} joined notifications room`);
-  }
-
   @SubscribeMessage('leave')
-  handleLeave(
-    @MessageBody() data: { userId: string },
-    @ConnectedSocket() client: Socket,
-  ) {
-    this.userConnections.delete(data.userId);
-    client.leave(`user_${data.userId}`);
-    console.log(`User ${data.userId} left notifications room`);
+  handleLeave(@ConnectedSocket() client: Socket) {
+    // Получаем userId из авторизованных данных клиента
+    const userId = (client as SocketWithUser).data?.user?.userId;
+
+    if (!userId) {
+      console.log(
+        `Client ${client.id} attempted to leave without proper authentication`,
+      );
+      return;
+    }
+
+    this.userConnections.delete(userId);
+    void client.leave(`user_${userId}`);
+    console.log(`User ${userId} left notifications room`);
   }
 
-  // Метод для отправки уведомления конкретному пользователю
+  // Метод для отправки уведомления конкретному пользователю (в комнату user_<id>)
+  notifyUser(userId: string, payload: NotificationPayload) {
+    this.server.to(`user_${userId}`).emit('notificateNewRequest', payload);
+  }
+
+  // Удобные методы под конкретные статусы
+  notifyNewRequest(userId: string, payload: Omit<NotificationPayload, 'type'>) {
+    this.notifyUser(userId, { type: 'new', ...payload });
+  }
+
+  notifyAcceptedRequest(
+    userId: string,
+    payload: Omit<NotificationPayload, 'type'>,
+  ) {
+    this.notifyUser(userId, { type: 'accepted', ...payload });
+  }
+
+  notifyRejectedRequest(
+    userId: string,
+    payload: Omit<NotificationPayload, 'type'>,
+  ) {
+    this.notifyUser(userId, { type: 'rejected', ...payload });
+  }
+
+  // Метод для отправки уведомления конкретному пользователю (legacy)
   sendNotificationToUser(userId: string, notification: Notification) {
     this.server.to(`user_${userId}`).emit('notification', notification);
   }
