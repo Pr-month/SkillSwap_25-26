@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-yandex';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from '../auth.service';
 import { IYandexOAuthConfig } from '../../config/config.types';
+import { yandexOAuthConfig } from 'src/config';
 
 // Интерфейс для профиля пользователя от Яндекса
 interface YandexProfile {
@@ -17,10 +18,10 @@ interface YandexProfile {
 @Injectable()
 export class YandexStrategy extends PassportStrategy(Strategy, 'yandex') {
   constructor(
-    private configService: ConfigService,
+    @Inject(yandexOAuthConfig.KEY)
+    private yandexConfig: IYandexOAuthConfig,
     private authService: AuthService,
   ) {
-    const yandexConfig = configService.get<IYandexOAuthConfig>('YANDEX_OAUTH');
 
     if (!yandexConfig) {
       throw new Error('Yandex OAuth configuration not found');

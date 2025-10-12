@@ -16,7 +16,7 @@ export const databaseConfig = registerAs(
     database: process.env.DB_DATABASE || 'skillswap',
     entities: [__dirname + '/../**/*.entity{.ts,.js}'],
     synchronize: process.env.NODE_ENV !== 'production', // Отключаем в продакшене
-    dropSchema: process.env.NODE_ENV === 'test', // Очищаем схему при тестах
+    // dropSchema: process.env.NODE_ENV === 'test', // Очищаем схему при тестах
   }),
 );
 
